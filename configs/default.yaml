@@ -1,47 +1,33 @@
 # Deep-Guard Agent Configuration
 
-# Detection backend settings
 detection:
-  # Visual-Lip Encoder
   visual:
-    backend: "mediapipe"          # mediapipe | openface
+    backend: "mediapipe"
     face_mesh_confidence: 0.5
-    lip_landmarks: true
-    frame_batch_size: 16
+    temporal_smoothing: 0.0
 
-  # Audio-Articulatory Encoder
   audio:
     model_name: "facebook/wav2vec2-base-960h"
     sample_rate: 16000
-    use_mfa: false                # Montreal Forced Aligner (requires separate install)
+    use_mfa: false
 
-  # Cross-Modal Fusion
   fusion:
-    model_name: "av-hubert-base"
-    alignment_window_ms: 40       # Frame alignment tolerance in milliseconds
-    discrepancy_threshold: 0.65   # Threshold for flagging mismatch regions
+    checkpoint_path: null
+    discrepancy_threshold: 0.65
 
-# LLM Reasoner settings
 reasoning:
-  provider: "openai"              # openai | anthropic
-  model: "gpt-4o"
+  provider: "groq"
+  model: "llama-3.3-70b-versatile"
+  base_url: "https://api.groq.com/openai/v1"
   temperature: 0.3
   max_tokens: 2048
 
-# Interface settings
 interface:
   overlay:
     heatmap_opacity: 0.4
-    bounding_box_color: [255, 0, 0]
-    highlight_top_k_frames: 10
-  report:
-    format: "pdf"                 # pdf | json | html
-    include_timestamps: true
-    include_heatmaps: true
 
-# Application settings
 app:
   host: "0.0.0.0"
   port: 7860
-  max_video_duration_sec: 300     # 5 minutes
+  max_video_duration_sec: 300
   temp_dir: "/tmp/deepguard"
