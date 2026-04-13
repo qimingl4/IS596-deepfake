@@ -1,0 +1,481 @@
+\documentclass[11pt,a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}                 % Times Roman font
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{listings}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    citecolor=blue!60!black,
+    urlcolor=blue!60!black,
+}
+
+% ── Section formatting ────────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{0.5em}{}
+
+% ── Header / Footer ──────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small IS596 --- Intelligent Systems}
+\lhead{\small Deep-Guard Agent}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Code listing style ────────────────────────────────────────────────────────
+\lstset{
+    basicstyle=\ttfamily\small,
+    frame=single,
+    breaklines=true,
+    backgroundcolor=\color{gray!5},
+    rulecolor=\color{gray!30},
+}
+
+% ── Spacing ───────────────────────────────────────────────────────────────────
+\setstretch{1.15}
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0pt}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Title ─────────────────────────────────────────────────────────────────────
+\begin{center}
+    {\LARGE\bfseries Deep-Guard Agent: An Interactive Audio-Visual\\[4pt]
+    Intelligent System for Deepfake Detection\\[4pt]
+    and Cognitive Intervention}
+
+    \vspace{1em}
+
+    {\large Qiming Li \quad Yiting Wang \quad Yawen Ou}
+
+    \vspace{0.4em}
+
+    {\normalsize School of Information Sciences, University of Illinois Urbana-Champaign}
+
+    \vspace{0.4em}
+
+    {\normalsize IS596 --- Intelligent Systems \quad|\quad April 2026}
+\end{center}
+
+\vspace{0.5em}
+\hrule
+\vspace{1.5em}
+
+% ── Abstract ──────────────────────────────────────────────────────────────────
+\begin{abstract}
+Deepfake technology poses escalating threats to information integrity, personal privacy, and democratic institutions. Current detection systems are predominantly unimodal, opaque, and disconnected from the human decision-making process. We present \textbf{Deep-Guard Agent}, an interactive audio-visual intelligent system that addresses three critical gaps: (1) a \emph{technological gap} through physics-grounded detection based on articulatory representation learning, (2) a \emph{cognitive gap} through LLM-powered transparent reasoning that engages analytical thinking, and (3) an \emph{ethical gap} through forensic report generation that supports victims' digital advocacy. The system combines MediaPipe-based lip movement tracking, Wav2Vec2 audio-articulatory encoding, Transformer-based cross-modal fusion, and large language model reasoning to detect audio-visual inconsistencies that are physically impossible in authentic recordings. A Gradio-based web interface presents annotated video overlays, interactive discrepancy timelines, and structured forensic reports designed to shift users from intuitive ``System~1'' acceptance toward analytical ``System~2'' evaluation of potentially manipulated media.
+\end{abstract}
+
+\textbf{Keywords:} deepfake detection, audio-visual analysis, articulatory representation learning, explainable AI, cognitive intervention, cross-modal fusion
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Research Questions}
+
+This project investigates three interconnected research questions:
+
+\begin{description}[leftmargin=1.5em, labelindent=0em]
+    \item[\textbf{RQ1.}] How can articulatory representation learning---grounded in the physics of human speech production---be leveraged to detect audio-visual inconsistencies in deepfake videos more robustly than pixel-level or spectral-level approaches?
+
+    \item[\textbf{RQ2.}] Can an LLM-powered reasoning agent translate opaque detection scores into transparent, evidence-grounded explanations that help non-expert users critically evaluate potentially manipulated media?
+
+    \item[\textbf{RQ3.}] To what extent does providing structured forensic evidence (e.g., phoneme-level mismatch analysis, frame-level discrepancy timelines) shift users from intuitive ``System~1'' acceptance toward analytical ``System~2'' evaluation of synthetic media?
+\end{description}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+
+The rapid advancement of generative AI has made deepfake creation accessible to anyone with a consumer GPU and an internet connection. Tools such as DeepFaceLab, FaceSwap, and diffusion-based face synthesis models produce hyper-realistic face-swapped and lip-synced videos that are increasingly indistinguishable from authentic footage \citep{tolosana2020deepfakes, mirsky2021creation}. The consequences are severe: political deepfakes undermine democratic discourse \citep{chesney2019deep}; non-consensual intimate imagery (NCII) disproportionately harms women and marginalized communities \citep{ajder2019state}; and financial fraud through voice/face impersonation has resulted in documented losses exceeding \$25 million \citep{chen2024deepfake}.
+
+Despite growing awareness, current detection solutions suffer from three fundamental gaps:
+
+\textbf{Technological Gap.} Most deployed detectors are unimodal---they analyze either visual artifacts (blending boundaries, unnatural blinking) or audio anomalies (spectral inconsistencies) in isolation. However, the most convincing deepfakes, particularly lip-sync manipulations, require cross-modal analysis where visual lip movements are compared against the corresponding audio signal. Articulatory phonetics tells us that human speech production follows strict physical constraints: bilabial consonants (/b/, /p/, /m/) require complete lip closure, and current synthesis methods routinely violate these constraints in ways that are measurable but invisible to casual observers \citep{wang2024artavdf}.
+
+\textbf{Cognitive Gap.} Even when detection systems correctly identify manipulated content, presenting results as opaque confidence scores (e.g., ``87\% Fake'') fails to support informed decision-making. Research in Dual Process Theory \citep{kahneman2011thinking} demonstrates that humans default to fast, intuitive ``System~1'' processing when consuming media. Without structured, evidence-based explanations that engage ``System~2'' analytical thinking, users either over-trust or dismiss detection results without genuine understanding.
+
+\textbf{Ethical and Legal Gap.} Victims of deepfake abuse---particularly NCII victims---need more than binary classification. They require forensic reports with traceable evidence chains (timestamped frames, cryptographic hashes, phoneme-level analysis) that can support platform moderation appeals, legal proceedings, and digital advocacy \citep{abercrombie2024taxonomy}.
+
+Deep-Guard Agent addresses all three gaps through an integrated system combining physics-grounded audio-visual detection, LLM-powered explainable reasoning, and a human-centered interface designed to foster critical media literacy.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Related Work}
+
+\subsection{Deepfake Detection Methods}
+
+Early deepfake detection relied on visual artifact analysis---detecting blending inconsistencies, unnatural eye blinking, or spectral artifacts in face-swapped images \citep{li2019exposing, afchar2018mesonet}. While effective against first-generation face swaps, these methods are brittle against newer synthesis techniques.
+
+Audio-visual approaches represent a more robust detection paradigm. SyncNet \citep{chung2017out} pioneered audio-visual synchronization analysis. \citet{haliassos2021lips} proposed \emph{Lips Don't Lie}, demonstrating that irregular mouth movements detectable through lipreading models serve as reliable deepfake indicators.
+
+\textbf{AV-HuBERT} \citep{shi2022learning} introduced a self-supervised framework for learning joint audio-visual representations through masked prediction, demonstrating that multimodal pre-training captures fine-grained correlations between speech acoustics and facial movements. Most directly relevant to our work, \textbf{ART-AVDF} \citep{wang2024artavdf} introduced articulatory representation learning for audio-visual deepfake detection. Rather than operating on raw pixel features, ART-AVDF maps both audio and visual signals to articulatory feature spaces that describe the physical configuration of the vocal tract during speech---a fundamentally more robust representation because it exploits physical laws that generative models cannot easily circumvent.
+
+\subsection{Self-Supervised Speech Representations}
+
+\textbf{Wav2Vec 2.0} \citep{baevski2020wav2vec} demonstrated that self-supervised pre-training on unlabeled speech data learns rich acoustic representations. The model's hidden states encode articulatory configurations without explicit supervision \citep{cho2023evidence}, making Wav2Vec2 an effective audio encoder whose representations implicitly encode the physical speech production process.
+
+\subsection{Explainable AI for Media Forensics}
+
+A critical limitation of existing deepfake detectors is their opacity. CNNs and transformer-based classifiers produce confidence scores without explaining \emph{what} makes a video suspicious \citep{arrieta2020explainable}. Recent work has explored attention visualization \citep{wodajo2021deepfake}, temporal saliency maps \citep{haliassos2022leveraging}, and natural language explanations generated by multimodal LLMs \citep{jia2024chatgpt}. Our work extends this line by using an LLM as an active reasoning agent that synthesizes multiple detection signals into structured forensic analyses grounded in physical evidence.
+
+\subsection{Cognitive Intervention and Dual Process Theory}
+
+\citet{kahneman2011thinking} distinguishes between fast, automatic ``System~1'' processing and slow, deliberative ``System~2'' reasoning. Media consumption overwhelmingly engages System~1, making users vulnerable to deepfakes \citep{pennycook2019lazy}. Research demonstrates that accuracy nudges significantly reduce misinformation sharing \citep{pennycook2021shifting}, and ``prebunking'' approaches build resilience \citep{roozenbeek2022combat}. Our system operationalizes these insights by providing structured forensic evidence that transforms passive consumption into active evaluation.
+
+\subsection{Harm Taxonomy and Ethical Frameworks}
+
+\citet{abercrombie2024taxonomy} developed a comprehensive taxonomy of harms from AI-generated media, distinguishing content-level, distribution-level, and systemic harms. Our system incorporates this taxonomy through automated harm categorization (political manipulation, NCII, financial fraud, general synthetic media) with tailored recommended actions. The system is designed as a transparency tool providing evidence for human judgment, mitigating the dual-use concern of detection systems being weaponized for censorship \citep{paris2019deepfakes}.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Study Rationale}
+
+Existing deepfake detection systems face a fundamental paradox: as generative models improve, artifact-based detection becomes increasingly unreliable, while human perception becomes increasingly deceived. This creates an urgent need for detection approaches that:
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Are grounded in physical invariants} rather than statistical artifacts. The biomechanics of lip closure for bilabial sounds, the aerodynamics of fricative production, and the temporal coordination of articulators represent detection signals rooted in physical laws---not limitations of current technology.
+
+    \item \textbf{Explain rather than classify.} A 92\% confidence score is meaningless to a victim seeking platform recourse, a journalist verifying a source, or a voter evaluating a political video. Users need to understand \emph{what specific evidence} supports the detection result.
+
+    \item \textbf{Integrate detection with intervention.} Detection alone is insufficient if users cannot act on the results. Deep-Guard Agent bridges the gap between technical detection and practical action through platform-ready forensic reports, harm-contextualized recommendations, and fostering critical thinking skills.
+\end{enumerate}
+
+This project is further motivated by the observation that the most impactful deepfakes---political misinformation, NCII, financial fraud---are precisely those where the combination of technical detection, explainable reasoning, and actionable forensics is most urgently needed.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Conceptual Model and Approach}
+
+\subsection{Design Philosophy}
+
+Deep-Guard Agent is designed as a \textbf{collaborative human-AI system} rather than a fully automated detector. Three core principles guide the architecture:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Physics over Pixels}: Detection is rooted in articulatory phonetics---physical properties of speech production that deepfake generators cannot easily violate.
+    \item \textbf{Transparency over Accuracy}: The system prioritizes generating interpretable, evidence-grounded explanations that enable informed human judgment.
+    \item \textbf{Intervention over Classification}: The system aims to actively support cognitive intervention---helping users develop critical evaluation skills.
+\end{itemize}
+
+\subsection{System Architecture}
+
+The system follows a three-layer architecture (Figure~\ref{fig:arch}):
+
+\begin{figure}[H]
+\centering
+\small
+\begin{lstlisting}[frame=none,backgroundcolor=\color{white}]
+ Layer 1: Physics-Grounded Detection
+ +------------------+  +------------------+
+ | Visual-Lip       |  | Audio-Articulatory|
+ | Encoder          |  | Encoder           |
+ | (MediaPipe)      |  | (Wav2Vec2)        |
+ +--------+---------+  +--------+----------+
+          |                      |
+          +-----> Cross-Modal <--+
+                  Fusion (Transformer)
+                     |
+            Discrepancy Scores + Heatmaps
+ ------------------------------------------------
+ Layer 2: LLM-Powered Reasoning
+            Scores --> LLM Agent --> Structured
+                     (LLaMA 3.3)    Analysis (JSON)
+ ------------------------------------------------
+ Layer 3: Human-Agent Interface
+   Annotated Video | Forensic Report | JSON Export
+\end{lstlisting}
+\caption{Three-layer architecture of Deep-Guard Agent.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Cognitive Intervention Model}
+
+The interface is designed to interrupt System~1 processing and activate System~2 evaluation through a structured information flow:
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Attention Capture}: Annotated video with per-frame colored overlays (green for authentic, red for flagged frames) immediately signals that content requires scrutiny.
+    \item \textbf{Evidence Presentation}: The forensic report provides specific, concrete evidence---e.g., ``Frame~45 (1.8s): bilabial phoneme /p/ detected in audio but lip closure absent''---rather than abstract scores.
+    \item \textbf{Contextualized Harm Assessment}: Automated harm categorization with tailored recommended actions connects detection to actionable next steps.
+    \item \textbf{Forensic Traceability}: SHA-256 file hashing, timestamped frame references, and exportable JSON reports create an evidence chain suitable for platform appeals or legal proceedings.
+\end{enumerate}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Technical Explanation of the System}
+
+\subsection{Visual-Lip Encoder}
+
+The visual encoder uses \textbf{MediaPipe FaceLandmarker} (Tasks API) \citep{lugaresi2019mediapipe} to extract 478-point 3D face landmarks from each video frame. From these, we isolate lip-region landmarks (22 outer + 22 inner lip contour points) and compute physics-informed shape descriptors:
+
+\begin{table}[H]
+\centering
+\caption{Lip shape descriptors for deepfake detection.}
+\label{tab:descriptors}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Descriptor} & \textbf{Definition} & \textbf{Detection Relevance} \\
+\midrule
+Aspect Ratio    & Height/width of lip bounding box          & Mouth opening shape \\
+Openness        & Distance: upper to lower lip midpoints    & Critical for bilabial detection \\
+Asymmetry       & $|$left lip height $-$ right lip height$|$   & Synthesis artifact exposure \\
+Eccentricity    & PCA-based shape elongation                & Unnatural lip shapes \\
+Corner Angle    & Angle between lip corners vs.\ center     & Impossible corner positions \\
+Bilabial Closure & Openness / face width                    & Key phoneme-specific signal \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These descriptors, combined with flattened normalized landmark coordinates, produce a \textbf{256-dimensional feature vector} per frame.
+
+\subsection{Audio-Articulatory Encoder}
+
+The audio encoder extracts articulatory representations using \textbf{Wav2Vec2} (\texttt{facebook/wav2vec2-base-960h}) \citep{baevski2020wav2vec}, a self-supervised speech model pre-trained on 960 hours of unlabeled English speech. Audio is extracted from video using FFmpeg, resampled to 16\,kHz mono, and processed to produce \textbf{768-dimensional frame-level embeddings} at 50\,fps (one frame per 20\,ms). Optionally, the \textbf{Montreal Forced Aligner} (MFA) \citep{mcauliffe2017montreal} produces phoneme-level temporal alignment, enabling explicit detection of bilabial phoneme mismatches.
+
+\subsection{Cross-Modal Fusion}
+
+The fusion module aligns audio and visual feature sequences to a common temporal resolution through linear interpolation, then processes them through a Transformer-based architecture:
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Modality Projection}: Separate projection networks (Linear $\rightarrow$ GELU $\rightarrow$ LayerNorm $\rightarrow$ Linear $\rightarrow$ LayerNorm) map audio (768-d) and visual (256-d) features into a shared 256-dimensional embedding space.
+
+    \item \textbf{Temporal Attention}: A 2-layer, 4-head Transformer encoder captures cross-frame temporal dependencies---essential for detecting phoneme transition violations.
+
+    \item \textbf{Discrepancy Scoring}: Two complementary signals are combined:
+    \begin{equation}
+        s_{\text{final}} = 0.7 \cdot s_{\text{learned}} + 0.3 \cdot \frac{1 - \cos(\mathbf{a}, \mathbf{v})}{2}
+    \end{equation}
+    where $s_{\text{learned}}$ is the output of a learned binary classifier head (Linear $\rightarrow$ GELU $\rightarrow$ Linear $\rightarrow$ Sigmoid) and $\cos(\mathbf{a}, \mathbf{v})$ is the cosine similarity between projected audio and visual features.
+\end{enumerate}
+
+Frames exceeding the configurable threshold ($\tau = 0.65$) are flagged, and the overall deepfake probability is computed as $\bar{s} = \frac{1}{T}\sum_{t=1}^{T} s_t$.
+
+\subsection{LLM Reasoning Agent}
+
+Detection scores are aggregated into a structured context document and submitted to a large language model (LLaMA~3.3 70B via Groq API) with a system prompt instructing the model to: (1) \emph{Synthesize} all detection signals into a coherent analysis, (2) \emph{Explain} findings in plain language with specific physical evidence, and (3) \emph{Ground} conclusions in acoustic and articulatory science. The LLM returns structured JSON containing: summary, verdict (authentic/suspicious/likely\_fake), evidence points, harm category, recommended actions, phoneme analysis, and confidence reasoning. A robust fallback ensures functionality when the LLM is unavailable.
+
+\subsection{Human-Agent Interface}
+
+The web interface (Gradio~6) presents results through three coordinated views:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Annotated Video}: Per-frame overlays showing face bounding boxes, lip landmark contours, verdict badges, and red-bordered flagged frames.
+    \item \textbf{Inline Forensic Report}: A dark-themed HTML report rendered directly in the browser with verdict badge, AI-generated summary, evidence list, interactive discrepancy timeline chart, flagged frame table, and detection metadata.
+    \item \textbf{Exportable JSON Report}: Machine-readable forensic data with SHA-256 file hashing for evidence chain integrity.
+\end{itemize}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Data Use and Management Plan}
+
+\subsection{Input Data}
+
+Deep-Guard Agent processes user-uploaded video files (MP4, AVI, MOV, MKV) containing human faces with speech. The system does \textbf{not} collect, store, or transmit user data beyond the immediate analysis session. All processing occurs locally, and temporary files are stored in a configurable directory and not persisted across sessions.
+
+\subsection{Pre-Trained Models}
+
+\begin{table}[H]
+\centering
+\caption{Pre-trained models used in Deep-Guard Agent.}
+\label{tab:models}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Model} & \textbf{Source} & \textbf{License} & \textbf{Purpose} \\
+\midrule
+MediaPipe FaceLandmarker & Google     & Apache 2.0      & 3D face landmark extraction \\
+Wav2Vec2-base-960h       & Meta       & MIT             & Audio feature extraction \\
+LLaMA 3.3 70B (via Groq) & Meta      & Llama Community & LLM reasoning \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Evaluation Data (Planned)}
+
+For system evaluation, we plan to use the following publicly available benchmarks:
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{FakeAVCeleb} \citep{khalid2021fakeavceleb}: A multi-modal deepfake dataset with both audio and visual manipulations.
+    \item \textbf{DFDC} \citep{dolhansky2020deepfake}: The DeepFake Detection Challenge dataset containing over 100,000 video clips.
+    \item \textbf{ASVspoof 2019} \citep{todisco2019asvspoof}: For evaluating audio-only detection capabilities.
+\end{itemize}
+
+\subsection{Privacy and Ethical Considerations}
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{No data retention}: User-uploaded videos are processed via temporary files that are overwritten on each analysis.
+    \item \textbf{No biometric storage}: Facial landmarks are used only for real-time detection and are not stored or linked to identities.
+    \item \textbf{Harm-aware design}: The harm categorization system connects victims with appropriate resources rather than enabling surveillance.
+    \item \textbf{Transparency by design}: All detection signals and reasoning are exposed to the user; the system never makes opaque automated decisions.
+    \item \textbf{Dual-use mitigation}: The system does not automatically flag, remove, or report content---the decision to act remains with the human user.
+\end{itemize}
+
+\subsection{Data Pipeline}
+
+All data flows are local except the LLM API call (Groq), which receives only aggregated numerical scores and metadata---never raw video, audio, or facial data---ensuring that sensitive biometric information never leaves the user's machine.
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\bibliographystyle{apalike}
+\begin{thebibliography}{99}
+
+\bibitem[Abercrombie et~al., 2024]{abercrombie2024taxonomy}
+Abercrombie, G., Curry, A.~C., Dinkar, T., and Rieser, V. (2024).
+\newblock A taxonomy of harms from {AI}-generated media.
+\newblock In {\em Proceedings of the ACM Conference on Fairness, Accountability, and Transparency (FAccT)}.
+
+\bibitem[Afchar et~al., 2018]{afchar2018mesonet}
+Afchar, D., Nozick, V., Yamagishi, J., and Echizen, I. (2018).
+\newblock {MesoNet}: A compact facial video forgery detection network.
+\newblock In {\em IEEE International Workshop on Information Forensics and Security (WIFS)}.
+
+\bibitem[Ajder et~al., 2019]{ajder2019state}
+Ajder, H., Patrini, G., Cavalli, F., and Cullen, L. (2019).
+\newblock The state of deepfakes: Landscape, threats, and impact.
+\newblock {\em Deeptrace Labs Report}.
+
+\bibitem[Arrieta et~al., 2020]{arrieta2020explainable}
+Arrieta, A.~B. et~al. (2020).
+\newblock Explainable {Artificial Intelligence} ({XAI}): Concepts, taxonomies, opportunities and challenges toward responsible {AI}.
+\newblock {\em Information Fusion}, 58:82--115.
+
+\bibitem[Baevski et~al., 2020]{baevski2020wav2vec}
+Baevski, A., Zhou, H., Mohamed, A., and Auli, M. (2020).
+\newblock wav2vec 2.0: A framework for self-supervised learning of speech representations.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, volume~33.
+
+\bibitem[Chen et~al., 2024]{chen2024deepfake}
+Chen, Y. et~al. (2024).
+\newblock Deepfake-enabled financial fraud: Emerging threats and countermeasures.
+\newblock {\em IEEE Security \& Privacy}.
+
+\bibitem[Chesney and Citron, 2019]{chesney2019deep}
+Chesney, R. and Citron, D.~K. (2019).
+\newblock Deep fakes: A looming challenge for privacy, democracy, and national security.
+\newblock {\em California Law Review}, 107:1753--1820.
+
+\bibitem[Cho et~al., 2023]{cho2023evidence}
+Cho, S. et~al. (2023).
+\newblock Evidence of articulatory information in self-supervised speech representations.
+\newblock In {\em Proceedings of Interspeech}.
+
+\bibitem[Chung and Zisserman, 2017]{chung2017out}
+Chung, J.~S. and Zisserman, A. (2017).
+\newblock Out of time: Automated lip sync in the wild.
+\newblock In {\em Asian Conference on Computer Vision (ACCV)}.
+
+\bibitem[Dolhansky et~al., 2020]{dolhansky2020deepfake}
+Dolhansky, B. et~al. (2020).
+\newblock The {DeepFake Detection Challenge} ({DFDC}) dataset.
+\newblock {\em arXiv preprint arXiv:2006.07397}.
+
+\bibitem[Haliassos et~al., 2021]{haliassos2021lips}
+Haliassos, A., Vougioukas, K., Petridis, S., and Pantic, M. (2021).
+\newblock Lips don't lie: A generalisable and robust approach to face forgery detection.
+\newblock In {\em IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}.
+
+\bibitem[Haliassos et~al., 2022]{haliassos2022leveraging}
+Haliassos, A., Mira, R., Petridis, S., and Pantic, M. (2022).
+\newblock Leveraging real talking faces via self-supervision for robust forgery detection.
+\newblock In {\em IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}.
+
+\bibitem[Jia et~al., 2024]{jia2024chatgpt}
+Jia, S. et~al. (2024).
+\newblock Can {ChatGPT} detect deepfakes? A study of using multimodal large language models for media forensics.
+\newblock In {\em IEEE/CVF Winter Conference on Applications of Computer Vision}.
+
+\bibitem[Kahneman, 2011]{kahneman2011thinking}
+Kahneman, D. (2011).
+\newblock {\em Thinking, Fast and Slow}.
+\newblock Farrar, Straus and Giroux.
+
+\bibitem[Khalid et~al., 2021]{khalid2021fakeavceleb}
+Khalid, H., Tariq, S., Kim, M., and Woo, S.~S. (2021).
+\newblock {FakeAVCeleb}: A novel audio-video multimodal deepfake dataset.
+\newblock In {\em NeurIPS Datasets and Benchmarks Track}.
+
+\bibitem[Li and Lyu, 2019]{li2019exposing}
+Li, Y. and Lyu, S. (2019).
+\newblock Exposing deepfake videos by detecting face warping artifacts.
+\newblock In {\em CVPR Workshops}.
+
+\bibitem[Lugaresi et~al., 2019]{lugaresi2019mediapipe}
+Lugaresi, C. et~al. (2019).
+\newblock {MediaPipe}: A framework for building perception pipelines.
+\newblock {\em arXiv preprint arXiv:1906.08172}.
+
+\bibitem[McAuliffe et~al., 2017]{mcauliffe2017montreal}
+McAuliffe, M., Socolof, M., Mihuc, S., Wagner, M., and Sonderegger, M. (2017).
+\newblock {Montreal Forced Aligner}: Trainable text-speech alignment using {Kaldi}.
+\newblock In {\em Proceedings of Interspeech}.
+
+\bibitem[Mirsky and Lee, 2021]{mirsky2021creation}
+Mirsky, Y. and Lee, W. (2021).
+\newblock The creation and detection of deepfakes: A survey.
+\newblock {\em ACM Computing Surveys}, 54(1):1--41.
+
+\bibitem[Paris and Donovan, 2019]{paris2019deepfakes}
+Paris, B. and Donovan, J. (2019).
+\newblock Deepfakes and cheap fakes.
+\newblock {\em Data \& Society Report}.
+
+\bibitem[Pennycook and Rand, 2019]{pennycook2019lazy}
+Pennycook, G. and Rand, D.~G. (2019).
+\newblock Lazy, not biased: Susceptibility to partisan fake news is better explained by lack of reasoning than by motivated reasoning.
+\newblock {\em Cognition}, 188:39--50.
+
+\bibitem[Pennycook et~al., 2021]{pennycook2021shifting}
+Pennycook, G., Epstein, Z., Mosleh, M., Arechar, A.~A., Eckles, D., and Rand, D.~G. (2021).
+\newblock Shifting attention to accuracy can reduce misinformation online.
+\newblock {\em Nature}, 592:590--595.
+
+\bibitem[Roozenbeek and van~der Linden, 2022]{roozenbeek2022combat}
+Roozenbeek, J. and van~der Linden, S. (2022).
+\newblock How to combat health misinformation: A psychological approach.
+\newblock {\em American Journal of Tropical Medicine and Hygiene}, 107(2):14--17.
+
+\bibitem[Shi et~al., 2022]{shi2022learning}
+Shi, B., Hsu, W.-N., Lakhotia, K., and Mohamed, A. (2022).
+\newblock Learning audio-visual speech representation by masked multimodal cluster prediction.
+\newblock In {\em International Conference on Learning Representations (ICLR)}.
+
+\bibitem[Todisco et~al., 2019]{todisco2019asvspoof}
+Todisco, M. et~al. (2019).
+\newblock {ASVspoof} 2019: Future horizons in spoofed and fake audio detection.
+\newblock In {\em Proceedings of Interspeech}.
+
+\bibitem[Tolosana et~al., 2020]{tolosana2020deepfakes}
+Tolosana, R., Vera-Rodriguez, R., Fierrez, J., Morales, A., and Ortega-Garcia, J. (2020).
+\newblock Deepfakes and beyond: A survey of face manipulation and fake detection.
+\newblock {\em Information Fusion}, 64:131--148.
+
+\bibitem[Wang and Huang, 2024]{wang2024artavdf}
+Wang, Y. and Huang, J. (2024).
+\newblock {ART-AVDF}: Articulatory representation learning for audio-visual deepfake detection.
+\newblock {\em IEEE Transactions on Information Forensics and Security}.
+
+\bibitem[Wodajo and Atnafu, 2021]{wodajo2021deepfake}
+Wodajo, D. and Atnafu, S. (2021).
+\newblock Deepfake video detection using convolutional vision transformer.
+\newblock {\em arXiv preprint arXiv:2102.11126}.
+
+\end{thebibliography}
+
+\end{document}
