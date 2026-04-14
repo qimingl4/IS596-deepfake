@@ -197,13 +197,85 @@ class ReportGenerator:
         lines.extend(["", "=" * 60])
         return "\n".join(lines)
 
+    @staticmethod
+    def _build_svg_chart(
+        scores: np.ndarray,
+        threshold: float,
+        width: int = 700,
+        height: int = 160,
+    ) -> str:
+        """Build an inline SVG discrepancy timeline chart (no JS needed)."""
+        if len(scores) == 0:
+            return '<p style="color:#94a3b8;font-size:.85rem;">No score data available.</p>'
+
+        pad_l, pad_r, pad_t, pad_b = 34, 12, 16, 24
+        pw = width - pad_l - pad_r
+        ph = height - pad_t - pad_b
+        n = len(scores)
+        step = pw / max(n - 1, 1)
+
+        # Build polyline points for the score line
+        points = []
+        for i, s in enumerate(scores):
+            x = round(pad_l + i * step, 2)
+            y = round(pad_t + (1 - float(s)) * ph, 2)
+            points.append(f"{x},{y}")
+        polyline = " ".join(points)
+
+        # Build polygon for the area fill (close to bottom)
+        first_x = round(pad_l, 2)
+        last_x = round(pad_l + (n - 1) * step, 2)
+        bottom_y = round(pad_t + ph, 2)
+        area_poly = f"{first_x},{bottom_y} {polyline} {last_x},{bottom_y}"
+
+        # Threshold line y
+        thresh_y = round(pad_t + (1 - threshold) * ph, 2)
+
+        # Grid lines
+        grid_lines = ""
+        for v in [0, 0.25, 0.5, 0.75, 1.0]:
+            gy = round(pad_t + (1 - v) * ph, 2)
+            grid_lines += f'<line x1="{pad_l}" y1="{gy}" x2="{pad_l + pw}" y2="{gy}" stroke="#e2e8f0" stroke-width="1"/>\n'
+
+        svg = f"""\
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}"
+     style="width:100%;height:auto;display:block;" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(59,130,246,0.22)"/>
+      <stop offset="100%" stop-color="rgba(59,130,246,0.02)"/>
+    </linearGradient>
+  </defs>
+  <!-- grid -->
+  {grid_lines}
+  <!-- threshold -->
+  <line x1="{pad_l}" y1="{thresh_y}" x2="{pad_l + pw}" y2="{thresh_y}"
+        stroke="#fca5a5" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="{pad_l + pw - 2}" y="{thresh_y - 5}" text-anchor="end"
+        fill="#f87171" font-size="9" font-family="Inter,sans-serif" font-weight="500">threshold</text>
+  <!-- area -->
+  <polygon points="{area_poly}" fill="url(#areaGrad)"/>
+  <!-- line -->
+  <polyline points="{polyline}" fill="none" stroke="#3b82f6" stroke-width="1.5"
+            stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- y-axis labels -->
+  <text x="{pad_l - 6}" y="{pad_t + 4}" text-anchor="end"
+        fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">1</text>
+  <text x="{pad_l - 6}" y="{pad_t + ph + 4}" text-anchor="end"
+        fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">0</text>
+  <!-- x-axis label -->
+  <text x="{pad_l + pw / 2}" y="{height - 3}" text-anchor="middle"
+        fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Frame</text>
+</svg>"""
+        return svg
+
     def _build_html_body(
         self,
         fusion_result: FusionResult,
         analysis: AnalysisReport,
         source_file: str | None = None,
-    ) -> tuple[str, str, str]:
-        """Build shared HTML components. Returns (body_html, score_data_js, threshold)."""
+    ) -> str:
+        """Build the report HTML body (no JavaScript required)."""
         report = self._build_report_dict(fusion_result, analysis, source_file)
         video_fps = fusion_result.metadata.get("video_fps", 25.0)
 
@@ -215,8 +287,10 @@ class ReportGenerator:
         verdict_color = verdict_colors.get(analysis.verdict, "#6b7280")
 
         scores = fusion_result.discrepancy_scores
-        score_data_js = json.dumps([round(float(s), 3) for s in scores])
         threshold = fusion_result.metadata.get("threshold", 0.65)
+
+        # Build SVG chart (pure markup, no JS)
+        svg_chart = self._build_svg_chart(scores, threshold)
 
         evidence_html = "\n".join(f"<li>{e}</li>" for e in analysis.evidence)
         actions_html = "\n".join(f"<li>{a}</li>" for a in analysis.recommended_actions) if analysis.recommended_actions else "<li>No specific actions recommended</li>"
@@ -264,7 +338,7 @@ class ReportGenerator:
   <!-- timeline chart -->
   <div class="dg-section">
     <h3>Discrepancy Timeline</h3>
-    <canvas id="dg-timeline"></canvas>
+    {svg_chart}
   </div>
 
   <!-- evidence -->
@@ -292,7 +366,7 @@ class ReportGenerator:
     {"&middot; SHA-256 " + report['source_file_hash'][:16] + "..." if report.get('source_file_hash') else ""}
   </p>"""
 
-        return body, score_data_js, str(threshold)
+        return body
 
     _CSS = """\
   .dg-report *, .dg-report *::before, .dg-report *::after {
@@ -325,7 +399,7 @@ class ReportGenerator:
   .dg-report .dg-list { padding-left:1.2rem; font-size:.88rem; color:#475569; }
   .dg-report .dg-list li { margin:.25rem 0; }
   /* chart */
-  .dg-report canvas { width:100%; height:160px; display:block; }
+  .dg-report svg { max-width:100%; height:auto; display:block; }
   /* table */
   .dg-report table { width:100%; border-collapse:collapse; font-size:.82rem; }
   .dg-report th { color:#94a3b8; font-weight:600; text-align:left;
@@ -337,70 +411,6 @@ class ReportGenerator:
       font-size:.7rem; color:#94a3b8; text-align:center;
       font-family:ui-monospace,monospace; word-break:break-all; }"""
 
-    _CHART_JS = """\
-const scores = __SCORES__;
-const threshold = __THRESHOLD__;
-const canvas = document.getElementById('dg-timeline');
-if (canvas) {
-  const ctx = canvas.getContext('2d');
-  function draw() {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-    const w = rect.width, h = rect.height;
-    const pad = {t:16, r:12, b:24, l:32};
-    const pw = w-pad.l-pad.r, ph = h-pad.t-pad.b;
-    ctx.clearRect(0,0,w,h);
-
-    /* grid */
-    ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=1;
-    for(let v=0;v<=1;v+=0.25){
-      const y=pad.t+(1-v)*ph;
-      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+pw,y);ctx.stroke();
-    }
-    /* threshold */
-    const ty=pad.t+(1-threshold)*ph;
-    ctx.strokeStyle='#fca5a5'; ctx.setLineDash([5,3]); ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(pad.l,ty);ctx.lineTo(pad.l+pw,ty);ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle='#f87171'; ctx.font='500 10px Inter,sans-serif';
-    ctx.fillText('threshold',pad.l+pw-48,ty-4);
-
-    /* area + line */
-    if(scores.length>0){
-      const step=pw/(scores.length-1||1);
-      ctx.beginPath();
-      ctx.moveTo(pad.l, pad.t+ph);
-      scores.forEach((s,i)=>{
-        ctx.lineTo(pad.l+i*step, pad.t+(1-s)*ph);
-      });
-      ctx.lineTo(pad.l+(scores.length-1)*step, pad.t+ph);
-      ctx.closePath();
-      const grad=ctx.createLinearGradient(0,pad.t,0,pad.t+ph);
-      grad.addColorStop(0,'rgba(59,130,246,0.18)');
-      grad.addColorStop(1,'rgba(59,130,246,0.01)');
-      ctx.fillStyle=grad; ctx.fill();
-
-      ctx.beginPath();
-      scores.forEach((s,i)=>{
-        const x=pad.l+i*step, y=pad.t+(1-s)*ph;
-        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-      });
-      ctx.strokeStyle='#3b82f6'; ctx.lineWidth=1.5; ctx.stroke();
-    }
-    /* labels */
-    ctx.fillStyle='#94a3b8'; ctx.font='10px Inter,sans-serif';
-    ctx.textAlign='right';
-    ctx.fillText('1',pad.l-6,pad.t+4);
-    ctx.fillText('0',pad.l-6,pad.t+ph+4);
-    ctx.textAlign='center';
-    ctx.fillText('Frame',pad.l+pw/2,h-2);
-  }
-  draw(); window.addEventListener('resize',draw);
-}"""
-
     def to_html_embed(
         self,
         fusion_result: FusionResult,
@@ -408,16 +418,10 @@ if (canvas) {
         source_file: str | None = None,
     ) -> str:
         """Generate an embeddable HTML fragment for Gradio gr.HTML component."""
-        body, score_data_js, threshold = self._build_html_body(
-            fusion_result, analysis, source_file,
-        )
-        chart_js = self._CHART_JS.replace("__SCORES__", score_data_js).replace(
-            "__THRESHOLD__", threshold
-        )
+        body = self._build_html_body(fusion_result, analysis, source_file)
         return (
             f"<style>{self._CSS}</style>"
             f'<div class="dg-report">{body}</div>'
-            f"<script>{chart_js}</script>"
         )
 
     def to_html(
@@ -428,12 +432,7 @@ if (canvas) {
         source_file: str | None = None,
     ) -> str:
         """Export report as a standalone HTML file with embedded styles."""
-        body, score_data_js, threshold = self._build_html_body(
-            fusion_result, analysis, source_file,
-        )
-        chart_js = self._CHART_JS.replace("__SCORES__", score_data_js).replace(
-            "__THRESHOLD__", threshold
-        )
+        body = self._build_html_body(fusion_result, analysis, source_file)
         html = f"""\
 <!DOCTYPE html>
 <html lang="en">
@@ -445,7 +444,6 @@ if (canvas) {
 </head>
 <body class="dg-report" style="padding:2rem;">
 {body}
-<script>{chart_js}</script>
 </body>
 </html>"""
         path = Path(output_path)
