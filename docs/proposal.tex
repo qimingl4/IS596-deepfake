@@ -3,7 +3,7 @@
 % ── Packages ──────────────────────────────────────────────────────────────────
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{mathptmx}                 % Times Roman font
+\usepackage{newtxtext,newtxmath}       % Times Roman font
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -104,7 +104,7 @@ This project investigates three interconnected research questions:
 % ══════════════════════════════════════════════════════════════════════════════
 \section{Introduction}
 
-The rapid advancement of generative AI has made deepfake creation accessible to anyone with a consumer GPU and an internet connection. Tools such as DeepFaceLab, FaceSwap, and diffusion-based face synthesis models produce hyper-realistic face-swapped and lip-synced videos that are increasingly indistinguishable from authentic footage \citep{tolosana2020deepfakes, mirsky2021creation}. The consequences are severe: political deepfakes undermine democratic discourse \citep{chesney2019deep}; non-consensual intimate imagery (NCII) disproportionately harms women and marginalized communities \citep{ajder2019state}; and financial fraud through voice/face impersonation has resulted in documented losses exceeding \$25 million \citep{chen2024deepfake}.
+The rapid advancement of generative AI has made deepfake creation accessible to anyone with a consumer GPU and an internet connection. Tools such as DeepFaceLab, FaceSwap, and diffusion-based face synthesis models produce hyper-realistic face-swapped and lip-synced videos that are increasingly indistinguishable from authentic footage \citep{tolosana2020deepfakes, mirsky2021creation}. The consequences are severe: political deepfakes undermine democratic discourse \citep{chesney2019deep}; non-consensual intimate imagery (NCII) disproportionately harms women and marginalized communities; and financial fraud through voice/face impersonation has resulted in documented losses exceeding \$25 million.
 
 Despite growing awareness, current detection solutions suffer from three fundamental gaps:
 
@@ -112,7 +112,7 @@ Despite growing awareness, current detection solutions suffer from three fundame
 
 \textbf{Cognitive Gap.} Even when detection systems correctly identify manipulated content, presenting results as opaque confidence scores (e.g., ``87\% Fake'') fails to support informed decision-making. Research in Dual Process Theory \citep{kahneman2011thinking} demonstrates that humans default to fast, intuitive ``System~1'' processing when consuming media. Without structured, evidence-based explanations that engage ``System~2'' analytical thinking, users either over-trust or dismiss detection results without genuine understanding.
 
-\textbf{Ethical and Legal Gap.} Victims of deepfake abuse---particularly NCII victims---need more than binary classification. They require forensic reports with traceable evidence chains (timestamped frames, cryptographic hashes, phoneme-level analysis) that can support platform moderation appeals, legal proceedings, and digital advocacy \citep{abercrombie2024taxonomy}.
+\textbf{Ethical and Legal Gap.} Victims of deepfake abuse---particularly NCII victims---need more than binary classification. They require forensic reports with traceable evidence chains (timestamped frames, cryptographic hashes, phoneme-level analysis) that can support platform moderation appeals, legal proceedings, and digital advocacy.
 
 Deep-Guard Agent addresses all three gaps through an integrated system combining physics-grounded audio-visual detection, LLM-powered explainable reasoning, and a human-centered interface designed to foster critical media literacy.
 
@@ -122,27 +122,27 @@ Deep-Guard Agent addresses all three gaps through an integrated system combining
 
 \subsection{Deepfake Detection Methods}
 
-Early deepfake detection relied on visual artifact analysis---detecting blending inconsistencies, unnatural eye blinking, or spectral artifacts in face-swapped images \citep{li2019exposing, afchar2018mesonet}. While effective against first-generation face swaps, these methods are brittle against newer synthesis techniques.
+Early deepfake detection relied on visual artifact analysis---detecting blending inconsistencies, unnatural eye blinking, or spectral artifacts in face-swapped images \citep{tolosana2020deepfakes}. While effective against first-generation face swaps, these methods are brittle against newer synthesis techniques.
 
-Audio-visual approaches represent a more robust detection paradigm. SyncNet \citep{chung2017out} pioneered audio-visual synchronization analysis. \citet{haliassos2021lips} proposed \emph{Lips Don't Lie}, demonstrating that irregular mouth movements detectable through lipreading models serve as reliable deepfake indicators.
+Audio-visual approaches represent a more robust detection paradigm. \citet{haliassos2021lips} proposed \emph{Lips Don't Lie}, demonstrating that irregular mouth movements detectable through lipreading models serve as reliable deepfake indicators, significantly advancing cross-modal detection beyond earlier synchronization-based methods.
 
 \textbf{AV-HuBERT} \citep{shi2022learning} introduced a self-supervised framework for learning joint audio-visual representations through masked prediction, demonstrating that multimodal pre-training captures fine-grained correlations between speech acoustics and facial movements. Most directly relevant to our work, \textbf{ART-AVDF} \citep{wang2024artavdf} introduced articulatory representation learning for audio-visual deepfake detection. Rather than operating on raw pixel features, ART-AVDF maps both audio and visual signals to articulatory feature spaces that describe the physical configuration of the vocal tract during speech---a fundamentally more robust representation because it exploits physical laws that generative models cannot easily circumvent.
 
 \subsection{Self-Supervised Speech Representations}
 
-\textbf{Wav2Vec 2.0} \citep{baevski2020wav2vec} demonstrated that self-supervised pre-training on unlabeled speech data learns rich acoustic representations. The model's hidden states encode articulatory configurations without explicit supervision \citep{cho2023evidence}, making Wav2Vec2 an effective audio encoder whose representations implicitly encode the physical speech production process.
+\textbf{Wav2Vec 2.0} \citep{baevski2020wav2vec} demonstrated that self-supervised pre-training on unlabeled speech data learns rich acoustic representations. Research has shown that the model's hidden states encode articulatory configurations---the physical positions of the tongue, lips, and jaw during speech---without explicit supervision, making Wav2Vec2 an effective audio encoder whose representations implicitly encode the physical speech production process.
 
 \subsection{Explainable AI for Media Forensics}
 
-A critical limitation of existing deepfake detectors is their opacity. CNNs and transformer-based classifiers produce confidence scores without explaining \emph{what} makes a video suspicious \citep{arrieta2020explainable}. Recent work has explored attention visualization \citep{wodajo2021deepfake}, temporal saliency maps \citep{haliassos2022leveraging}, and natural language explanations generated by multimodal LLMs \citep{jia2024chatgpt}. Our work extends this line by using an LLM as an active reasoning agent that synthesizes multiple detection signals into structured forensic analyses grounded in physical evidence.
+A critical limitation of existing deepfake detectors is their opacity. CNNs and transformer-based classifiers produce confidence scores without explaining \emph{what} makes a video suspicious \citep{arrieta2020explainable}. Recent work has explored attention visualization, temporal saliency maps, and natural language explanations generated by multimodal LLMs. Our work extends this line by using an LLM not merely as a post-hoc explainer but as an active reasoning agent that synthesizes multiple detection signals into structured forensic analyses grounded in physical evidence.
 
 \subsection{Cognitive Intervention and Dual Process Theory}
 
-\citet{kahneman2011thinking} distinguishes between fast, automatic ``System~1'' processing and slow, deliberative ``System~2'' reasoning. Media consumption overwhelmingly engages System~1, making users vulnerable to deepfakes \citep{pennycook2019lazy}. Research demonstrates that accuracy nudges significantly reduce misinformation sharing \citep{pennycook2021shifting}, and ``prebunking'' approaches build resilience \citep{roozenbeek2022combat}. Our system operationalizes these insights by providing structured forensic evidence that transforms passive consumption into active evaluation.
+\citet{kahneman2011thinking} distinguishes between fast, automatic ``System~1'' processing and slow, deliberative ``System~2'' reasoning. Media consumption overwhelmingly engages System~1, making users vulnerable to deepfakes. \citet{pennycook2021shifting} demonstrated that accuracy nudges---simply prompting people to consider whether content is accurate---significantly reduce misinformation sharing. Our system operationalizes this insight by providing structured forensic evidence that transforms passive consumption into active evaluation.
 
 \subsection{Harm Taxonomy and Ethical Frameworks}
 
-\citet{abercrombie2024taxonomy} developed a comprehensive taxonomy of harms from AI-generated media, distinguishing content-level, distribution-level, and systemic harms. Our system incorporates this taxonomy through automated harm categorization (political manipulation, NCII, financial fraud, general synthetic media) with tailored recommended actions. The system is designed as a transparency tool providing evidence for human judgment, mitigating the dual-use concern of detection systems being weaponized for censorship \citep{paris2019deepfakes}.
+Recent scholarship has developed comprehensive taxonomies of harms from AI-generated media, distinguishing content-level harms (what is depicted), distribution-level harms (how it spreads), and systemic harms (long-term erosion of trust). Our system incorporates such frameworks through automated harm categorization (political manipulation, NCII, financial fraud, general synthetic media) with tailored recommended actions. The system is designed as a transparency tool providing evidence for human judgment, mitigating the dual-use concern of detection systems being weaponized for censorship \citep{chesney2019deep}.
 
 
 % ══════════════════════════════════════════════════════════════════════════════
@@ -247,7 +247,7 @@ These descriptors, combined with flattened normalized landmark coordinates, prod
 
 \subsection{Audio-Articulatory Encoder}
 
-The audio encoder extracts articulatory representations using \textbf{Wav2Vec2} (\texttt{facebook/wav2vec2-base-960h}) \citep{baevski2020wav2vec}, a self-supervised speech model pre-trained on 960 hours of unlabeled English speech. Audio is extracted from video using FFmpeg, resampled to 16\,kHz mono, and processed to produce \textbf{768-dimensional frame-level embeddings} at 50\,fps (one frame per 20\,ms). Optionally, the \textbf{Montreal Forced Aligner} (MFA) \citep{mcauliffe2017montreal} produces phoneme-level temporal alignment, enabling explicit detection of bilabial phoneme mismatches.
+The audio encoder extracts articulatory representations using \textbf{Wav2Vec2} (\texttt{facebook/wav2vec2-base-960h}) \citep{baevski2020wav2vec}, a self-supervised speech model pre-trained on 960 hours of unlabeled English speech. Audio is extracted from video using FFmpeg, resampled to 16\,kHz mono, and processed to produce \textbf{768-dimensional frame-level embeddings} at 50\,fps (one frame per 20\,ms). Optionally, the \textbf{Montreal Forced Aligner} (MFA) produces phoneme-level temporal alignment, enabling explicit detection of bilabial phoneme mismatches.
 
 \subsection{Cross-Modal Fusion}
 
@@ -313,8 +313,7 @@ For system evaluation, we plan to use the following publicly available benchmark
 
 \begin{itemize}[leftmargin=2em]
     \item \textbf{FakeAVCeleb} \citep{khalid2021fakeavceleb}: A multi-modal deepfake dataset with both audio and visual manipulations.
-    \item \textbf{DFDC} \citep{dolhansky2020deepfake}: The DeepFake Detection Challenge dataset containing over 100,000 video clips.
-    \item \textbf{ASVspoof 2019} \citep{todisco2019asvspoof}: For evaluating audio-only detection capabilities.
+    \item \textbf{DFDC} \citep{dolhansky2020deepfake}: The DeepFake Detection Challenge dataset containing over 100,000 video clips with known ground truth labels.
 \end{itemize}
 
 \subsection{Privacy and Ethical Considerations}
@@ -334,72 +333,32 @@ All data flows are local except the LLM API call (Groq), which receives only agg
 
 % ══════════════════════════════════════════════════════════════════════════════
 \bibliographystyle{apalike}
-\begin{thebibliography}{99}
-
-\bibitem[Abercrombie et~al., 2024]{abercrombie2024taxonomy}
-Abercrombie, G., Curry, A.~C., Dinkar, T., and Rieser, V. (2024).
-\newblock A taxonomy of harms from {AI}-generated media.
-\newblock In {\em Proceedings of the ACM Conference on Fairness, Accountability, and Transparency (FAccT)}.
-
-\bibitem[Afchar et~al., 2018]{afchar2018mesonet}
-Afchar, D., Nozick, V., Yamagishi, J., and Echizen, I. (2018).
-\newblock {MesoNet}: A compact facial video forgery detection network.
-\newblock In {\em IEEE International Workshop on Information Forensics and Security (WIFS)}.
-
-\bibitem[Ajder et~al., 2019]{ajder2019state}
-Ajder, H., Patrini, G., Cavalli, F., and Cullen, L. (2019).
-\newblock The state of deepfakes: Landscape, threats, and impact.
-\newblock {\em Deeptrace Labs Report}.
+\begin{thebibliography}{13}
 
 \bibitem[Arrieta et~al., 2020]{arrieta2020explainable}
-Arrieta, A.~B. et~al. (2020).
+Arrieta, A.~B., D{\'i}az-Rodr{\'i}guez, N., Del~Ser, J., Bennetot, A., Tabik, S., Barbado, A., Garcia, S., Gil-Lopez, S., Molina, D., Benjamins, R., Chatila, R., and Herrera, F. (2020).
 \newblock Explainable {Artificial Intelligence} ({XAI}): Concepts, taxonomies, opportunities and challenges toward responsible {AI}.
 \newblock {\em Information Fusion}, 58:82--115.
 
 \bibitem[Baevski et~al., 2020]{baevski2020wav2vec}
-Baevski, A., Zhou, H., Mohamed, A., and Auli, M. (2020).
+Baevski, A., Zhou, Y., Mohamed, A., and Auli, M. (2020).
 \newblock wav2vec 2.0: A framework for self-supervised learning of speech representations.
-\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, volume~33.
-
-\bibitem[Chen et~al., 2024]{chen2024deepfake}
-Chen, Y. et~al. (2024).
-\newblock Deepfake-enabled financial fraud: Emerging threats and countermeasures.
-\newblock {\em IEEE Security \& Privacy}.
+\newblock In {\em Advances in Neural Information Processing Systems (NeurIPS)}, volume~33, pages 12449--12460.
 
 \bibitem[Chesney and Citron, 2019]{chesney2019deep}
 Chesney, R. and Citron, D.~K. (2019).
 \newblock Deep fakes: A looming challenge for privacy, democracy, and national security.
 \newblock {\em California Law Review}, 107:1753--1820.
 
-\bibitem[Cho et~al., 2023]{cho2023evidence}
-Cho, S. et~al. (2023).
-\newblock Evidence of articulatory information in self-supervised speech representations.
-\newblock In {\em Proceedings of Interspeech}.
-
-\bibitem[Chung and Zisserman, 2017]{chung2017out}
-Chung, J.~S. and Zisserman, A. (2017).
-\newblock Out of time: Automated lip sync in the wild.
-\newblock In {\em Asian Conference on Computer Vision (ACCV)}.
-
 \bibitem[Dolhansky et~al., 2020]{dolhansky2020deepfake}
-Dolhansky, B. et~al. (2020).
+Dolhansky, B., Bitton, J., Pflaum, B., Lu, J., Howes, R., Wang, M., and Ferrer, C.~C. (2020).
 \newblock The {DeepFake Detection Challenge} ({DFDC}) dataset.
 \newblock {\em arXiv preprint arXiv:2006.07397}.
 
 \bibitem[Haliassos et~al., 2021]{haliassos2021lips}
 Haliassos, A., Vougioukas, K., Petridis, S., and Pantic, M. (2021).
 \newblock Lips don't lie: A generalisable and robust approach to face forgery detection.
-\newblock In {\em IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}.
-
-\bibitem[Haliassos et~al., 2022]{haliassos2022leveraging}
-Haliassos, A., Mira, R., Petridis, S., and Pantic, M. (2022).
-\newblock Leveraging real talking faces via self-supervision for robust forgery detection.
-\newblock In {\em IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}.
-
-\bibitem[Jia et~al., 2024]{jia2024chatgpt}
-Jia, S. et~al. (2024).
-\newblock Can {ChatGPT} detect deepfakes? A study of using multimodal large language models for media forensics.
-\newblock In {\em IEEE/CVF Winter Conference on Applications of Computer Vision}.
+\newblock In {\em IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, pages 5039--5049.
 
 \bibitem[Kahneman, 2011]{kahneman2011thinking}
 Kahneman, D. (2011).
@@ -411,55 +370,25 @@ Khalid, H., Tariq, S., Kim, M., and Woo, S.~S. (2021).
 \newblock {FakeAVCeleb}: A novel audio-video multimodal deepfake dataset.
 \newblock In {\em NeurIPS Datasets and Benchmarks Track}.
 
-\bibitem[Li and Lyu, 2019]{li2019exposing}
-Li, Y. and Lyu, S. (2019).
-\newblock Exposing deepfake videos by detecting face warping artifacts.
-\newblock In {\em CVPR Workshops}.
-
 \bibitem[Lugaresi et~al., 2019]{lugaresi2019mediapipe}
-Lugaresi, C. et~al. (2019).
+Lugaresi, C., Tang, J., Nash, H., McClanahan, C., Uboweja, E., Hao, M., and Grundmann, M. (2019).
 \newblock {MediaPipe}: A framework for building perception pipelines.
 \newblock {\em arXiv preprint arXiv:1906.08172}.
-
-\bibitem[McAuliffe et~al., 2017]{mcauliffe2017montreal}
-McAuliffe, M., Socolof, M., Mihuc, S., Wagner, M., and Sonderegger, M. (2017).
-\newblock {Montreal Forced Aligner}: Trainable text-speech alignment using {Kaldi}.
-\newblock In {\em Proceedings of Interspeech}.
 
 \bibitem[Mirsky and Lee, 2021]{mirsky2021creation}
 Mirsky, Y. and Lee, W. (2021).
 \newblock The creation and detection of deepfakes: A survey.
 \newblock {\em ACM Computing Surveys}, 54(1):1--41.
 
-\bibitem[Paris and Donovan, 2019]{paris2019deepfakes}
-Paris, B. and Donovan, J. (2019).
-\newblock Deepfakes and cheap fakes.
-\newblock {\em Data \& Society Report}.
-
-\bibitem[Pennycook and Rand, 2019]{pennycook2019lazy}
-Pennycook, G. and Rand, D.~G. (2019).
-\newblock Lazy, not biased: Susceptibility to partisan fake news is better explained by lack of reasoning than by motivated reasoning.
-\newblock {\em Cognition}, 188:39--50.
-
 \bibitem[Pennycook et~al., 2021]{pennycook2021shifting}
 Pennycook, G., Epstein, Z., Mosleh, M., Arechar, A.~A., Eckles, D., and Rand, D.~G. (2021).
 \newblock Shifting attention to accuracy can reduce misinformation online.
 \newblock {\em Nature}, 592:590--595.
 
-\bibitem[Roozenbeek and van~der Linden, 2022]{roozenbeek2022combat}
-Roozenbeek, J. and van~der Linden, S. (2022).
-\newblock How to combat health misinformation: A psychological approach.
-\newblock {\em American Journal of Tropical Medicine and Hygiene}, 107(2):14--17.
-
 \bibitem[Shi et~al., 2022]{shi2022learning}
 Shi, B., Hsu, W.-N., Lakhotia, K., and Mohamed, A. (2022).
 \newblock Learning audio-visual speech representation by masked multimodal cluster prediction.
 \newblock In {\em International Conference on Learning Representations (ICLR)}.
-
-\bibitem[Todisco et~al., 2019]{todisco2019asvspoof}
-Todisco, M. et~al. (2019).
-\newblock {ASVspoof} 2019: Future horizons in spoofed and fake audio detection.
-\newblock In {\em Proceedings of Interspeech}.
 
 \bibitem[Tolosana et~al., 2020]{tolosana2020deepfakes}
 Tolosana, R., Vera-Rodriguez, R., Fierrez, J., Morales, A., and Ortega-Garcia, J. (2020).
@@ -470,11 +399,6 @@ Tolosana, R., Vera-Rodriguez, R., Fierrez, J., Morales, A., and Ortega-Garcia, J
 Wang, Y. and Huang, J. (2024).
 \newblock {ART-AVDF}: Articulatory representation learning for audio-visual deepfake detection.
 \newblock {\em IEEE Transactions on Information Forensics and Security}.
-
-\bibitem[Wodajo and Atnafu, 2021]{wodajo2021deepfake}
-Wodajo, D. and Atnafu, S. (2021).
-\newblock Deepfake video detection using convolutional vision transformer.
-\newblock {\em arXiv preprint arXiv:2102.11126}.
 
 \end{thebibliography}
 
