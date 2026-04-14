@@ -24,69 +24,58 @@ from deepguard.utils.video import get_video_info
 
 logger = logging.getLogger(__name__)
 
-# ── Custom CSS for a polished dark-themed UI ──────────────────────────────────
+# ── Custom CSS ────────────────────────────────────────────────────────────────
 CUSTOM_CSS = """
-/* Global */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Container ── */
 .gradio-container {
-    max-width: 1100px !important;
+    max-width: 960px !important;
+    width: 100% !important;
     margin: 0 auto !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* Header area */
-#header-row {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border-radius: 16px;
-    padding: 32px 36px !important;
-    margin-bottom: 20px;
-    border: 1px solid #334155;
+/* ── Hero header ── */
+#hero { padding: 2rem 0 0.75rem !important; text-align: center; }
+#hero h1 {
+    font-size: 1.5rem !important; font-weight: 700 !important;
+    letter-spacing: -0.02em; color: #0f172a !important; margin: 0 !important;
 }
-#header-row * {
-    color: #f1f5f9 !important;
-}
-#header-row p {
-    color: #94a3b8 !important;
-    font-size: 0.95rem !important;
+#hero p {
+    font-size: 0.85rem !important; color: #64748b !important;
+    max-width: 480px; margin: 0.35rem auto 0 !important; line-height: 1.5;
 }
 
-/* Cards */
-.card-panel {
-    border-radius: 12px !important;
-    border: 1px solid #e2e8f0 !important;
-}
-
-/* Primary button */
+/* ── Analyze button ── */
 #analyze-btn {
-    background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    font-size: 1.05rem !important;
-    padding: 12px 0 !important;
-    border-radius: 10px !important;
-    transition: all 0.2s ease !important;
+    background: #0f172a !important; border: none !important;
+    color: #fff !important; font-weight: 600 !important;
+    font-size: 0.9rem !important; padding: 10px 0 !important;
+    border-radius: 8px !important; letter-spacing: 0.01em;
+    transition: background 0.15s ease !important;
+    margin-top: 0.5rem !important;
 }
-#analyze-btn:hover {
-    opacity: 0.9 !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+#analyze-btn:hover { background: #1e293b !important; }
+
+/* ── Video panels ── */
+#input-col, #output-col {
+    border: 1px solid #e2e8f0 !important; border-radius: 10px !important;
+    overflow: hidden !important; background: #ffffff !important;
+    min-height: 240px !important;
 }
 
-/* Inline HTML report */
-#report-html {
-    border-radius: 12px !important;
-    overflow: hidden !important;
-}
+/* ── Report area ── */
+#report-html { border-radius: 10px !important; overflow: hidden !important; }
 
-/* Download buttons row */
-#download-row .file-preview {
-    border-radius: 8px !important;
-}
+/* ── Download row ── */
+#dl-row { margin-top: 0.25rem !important; }
 
-/* Status / verdict badges */
-.verdict-authentic { color: #16a34a; font-weight: 700; }
-.verdict-suspicious { color: #d97706; font-weight: 700; }
-.verdict-likely-fake { color: #dc2626; font-weight: 700; }
+/* ── Tabs ── */
+.tab-nav button {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.82rem !important; font-weight: 500 !important;
+}
 """
 
 
@@ -253,42 +242,40 @@ def create_app() -> gr.Blocks:
 
     with gr.Blocks(title="Deep-Guard Agent") as app:
 
-        # ── Header ──
-        with gr.Row(elem_id="header-row"):
-            gr.Markdown(
-                "# 🛡 Deep-Guard Agent\n"
-                "**Audio-Visual Deepfake Detection & Cognitive Intervention**\n\n"
-                "Upload a video to detect deepfake artifacts. The system analyzes "
-                "lip-movement / speech consistency using articulatory representation "
-                "learning — detecting mismatches that are physically impossible in "
-                "authentic recordings."
-            )
+        # ── Hero ──
+        gr.HTML(
+            '<div id="hero">'
+            "<h1>Deep-Guard Agent</h1>"
+            "<p>Upload a video to detect audio-visual deepfake artifacts "
+            "using articulatory representation learning.</p>"
+            "</div>"
+        )
 
-        # ── Input / Output Row ──
+        # ── Video row ──
         with gr.Row(equal_height=True):
-            with gr.Column(scale=1):
-                video_input = gr.Video(label="Upload Video")
-                analyze_btn = gr.Button(
-                    "▶  Analyze Video",
-                    variant="primary",
-                    size="lg",
-                    elem_id="analyze-btn",
+            with gr.Column(scale=1, elem_id="input-col"):
+                video_input = gr.Video(label="Original")
+            with gr.Column(scale=1, elem_id="output-col"):
+                video_output = gr.Video(label="Annotated")
+
+        analyze_btn = gr.Button(
+            "Analyze",
+            variant="primary",
+            elem_id="analyze-btn",
+        )
+
+        # ── Results tabs ──
+        with gr.Tabs():
+            with gr.Tab("Report"):
+                report_html = gr.HTML(
+                    value=(
+                        '<p style="color:#94a3b8;text-align:center;padding:3rem 1rem;'
+                        'font-size:0.9rem;">Results will appear here after analysis.</p>'
+                    ),
+                    elem_id="report-html",
                 )
-
-            with gr.Column(scale=1):
-                video_output = gr.Video(label="Annotated Result")
-
-        # ── Inline HTML Report ──
-        with gr.Row():
-            report_html = gr.HTML(
-                value="<p style='color:#94a3b8; text-align:center; padding:2rem;'>"
-                      "Upload a video and click Analyze to see the forensic report here.</p>",
-                elem_id="report-html",
-            )
-
-        # ── JSON Download ──
-        with gr.Row(elem_id="download-row"):
-            json_output = gr.File(label="Download JSON Report")
+            with gr.Tab("Export"):
+                json_output = gr.File(label="JSON Report", elem_id="dl-row")
 
         # ── Wiring ──
         analyze_btn.click(
