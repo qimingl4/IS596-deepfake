@@ -20,6 +20,7 @@ from deepguard.detection.fusion import CrossModalFusion
 from deepguard.reasoning.llm_reasoner import LLMReasoner
 from deepguard.interface.overlay import VideoOverlay
 from deepguard.interface.report import ReportGenerator
+from deepguard.interface.legal_report import LegalReportGenerator
 from deepguard.utils.video import get_video_info
 
 logger = logging.getLogger(__name__)
@@ -122,14 +123,15 @@ class DeepGuardPipeline:
         )
         self.overlay = VideoOverlay()
         self.report_gen = ReportGenerator()
+        self.legal_report_gen = LegalReportGenerator()
         self.temp_dir = Path(app_cfg.get("temp_dir", "/tmp/deepguard"))
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
-    def analyze(self, video_path: str) -> tuple[str, str, str]:
+    def analyze(self, video_path: str) -> tuple[str, str, str, str]:
         """Run the full detection pipeline on a video.
 
         Returns:
-            (annotated_video_path, report_html_content, report_json_path)
+            (annotated_video_path, report_html, legal_html, report_json_path)
         """
         video_path_obj = Path(video_path)
         if not video_path_obj.exists():
@@ -204,9 +206,13 @@ class DeepGuardPipeline:
             fusion_result, analysis, source_file=video_path,
         )
 
+        legal_html = self.legal_report_gen.to_html_embed(
+            fusion_result, analysis, source_file=video_path,
+        )
+
         logger.info("Analysis complete!")
 
-        return annotated_path, html_content, json_path
+        return annotated_path, html_content, legal_html, json_path
 
 
 # ── Gradio Interface ──────────────────────────────────────────────────────────
@@ -220,25 +226,32 @@ def create_app() -> gr.Blocks:
         if pipeline is None:
             pipeline = DeepGuardPipeline()
 
+    _PLACEHOLDER = (
+        '<p style="color:#94a3b8;text-align:center;padding:3rem 1rem;'
+        'font-size:0.9rem;">Results will appear here after analysis.</p>'
+    )
+
     def process_video(video_file):
         logger.info("process_video called with: %s (type: %s)", video_file, type(video_file))
         if video_file is None:
-            return None, "<p style='color:#94a3b8;'>Please upload a video file first.</p>", None
+            return None, _PLACEHOLDER, _PLACEHOLDER, None
 
         try:
             initialize_pipeline()
             logger.info("Starting analysis for: %s", video_file)
-            annotated, html_content, json_path = pipeline.analyze(video_file)
+            annotated, html_content, legal_html, json_path = pipeline.analyze(video_file)
             logger.info("Analysis complete. Annotated: %s", annotated)
-            return annotated, html_content, json_path
+            return annotated, html_content, legal_html, json_path
 
         except ValueError as e:
             logger.warning("Validation error: %s", e)
-            return None, f"<p style='color:#ef4444;'>Error: {e}</p>", None
+            err = f"<p style='color:#ef4444;'>Error: {e}</p>"
+            return None, err, err, None
         except Exception as e:
             logger.exception("Pipeline error")
             err_msg = str(e) or type(e).__name__
-            return None, f"<p style='color:#ef4444;'>An error occurred: {err_msg}</p>", None
+            err = f"<p style='color:#ef4444;'>An error occurred: {err_msg}</p>"
+            return None, err, err, None
 
     with gr.Blocks(title="Deep-Guard Agent") as app:
 
@@ -268,11 +281,13 @@ def create_app() -> gr.Blocks:
         with gr.Tabs():
             with gr.Tab("Report"):
                 report_html = gr.HTML(
-                    value=(
-                        '<p style="color:#94a3b8;text-align:center;padding:3rem 1rem;'
-                        'font-size:0.9rem;">Results will appear here after analysis.</p>'
-                    ),
+                    value=_PLACEHOLDER,
                     elem_id="report-html",
+                )
+            with gr.Tab("Legal Report"):
+                legal_html = gr.HTML(
+                    value=_PLACEHOLDER,
+                    elem_id="legal-html",
                 )
             with gr.Tab("Export"):
                 json_output = gr.File(label="JSON Report", elem_id="dl-row")
@@ -281,7 +296,7 @@ def create_app() -> gr.Blocks:
         analyze_btn.click(
             fn=process_video,
             inputs=[video_input],
-            outputs=[video_output, report_html, json_output],
+            outputs=[video_output, report_html, legal_html, json_output],
         )
 
     return app
