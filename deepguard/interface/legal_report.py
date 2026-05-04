@@ -180,82 +180,91 @@ class LegalReportGenerator:
     margin:0; padding:0; box-sizing:border-box; }
 .lg-report {
     font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    color:#1e293b; line-height:1.6; padding:1.75rem 2rem; font-size:.9rem; }
+    color:#1e293b; line-height:1.65; padding:1.75rem 2rem; font-size:1rem; }
 
 /* header */
 .lg-report .lg-header {
     border-bottom:2px solid #0f172a; padding-bottom:1rem; margin-bottom:1.5rem; }
 .lg-report .lg-title {
-    font-size:1rem; font-weight:700; text-transform:uppercase;
-    letter-spacing:.06em; color:#0f172a; }
+    font-size:1.05rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.04em; color:#0f172a; }
 .lg-report .lg-subtitle {
-    font-size:.75rem; color:#64748b; margin-top:.2rem; }
+    font-size:.85rem; color:#475569; margin-top:.3rem; }
 .lg-report .lg-case-id {
-    font-family:ui-monospace,monospace; font-size:.72rem;
-    color:#64748b; margin-top:.4rem; }
+    font-family:ui-monospace,monospace; font-size:.78rem;
+    color:#475569; margin-top:.45rem; word-break:break-all; }
 
 /* section */
-.lg-report .lg-section { margin-bottom:1.5rem; }
+.lg-report .lg-section { margin-bottom:1.75rem; }
 .lg-report .lg-section-title {
-    font-size:.72rem; font-weight:700; text-transform:uppercase;
-    letter-spacing:.08em; color:#64748b; border-bottom:1px solid #e2e8f0;
-    padding-bottom:.3rem; margin-bottom:.75rem; }
+    font-size:.78rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.07em; color:#334155; border-bottom:2px solid #e2e8f0;
+    padding-bottom:.35rem; margin-bottom:.85rem; }
 
 /* verdict block */
 .lg-report .lg-verdict-block {
     display:flex; align-items:flex-start; gap:1rem;
-    background:#f8fafc; border-radius:8px; padding:1rem 1.25rem;
+    background:#f8fafc; border-radius:8px; padding:1.1rem 1.25rem;
     border-left:4px solid var(--vc, #6b7280); }
 .lg-report .lg-verdict-badge {
-    flex-shrink:0; padding:.3rem 1rem; border-radius:20px;
-    font-size:.8rem; font-weight:700; color:#fff;
+    flex-shrink:0; padding:.35rem 1.1rem; border-radius:20px;
+    font-size:.88rem; font-weight:700; color:#fff;
     background:var(--vc, #6b7280); white-space:nowrap; }
 .lg-report .lg-verdict-body { flex:1; }
 .lg-report .lg-verdict-conf {
-    font-size:.82rem; color:#64748b; margin-bottom:.4rem; }
+    font-size:.9rem; color:#475569; margin-bottom:.45rem; font-weight:500; }
 .lg-report .lg-verdict-legal {
-    font-size:.85rem; color:#334155; line-height:1.55; }
+    font-size:.92rem; color:#1e293b; line-height:1.6; }
 
 /* table */
-.lg-report table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.lg-report table { width:100%; border-collapse:collapse; font-size:.9rem; }
 .lg-report th {
-    color:#94a3b8; font-weight:600; text-align:left;
-    padding:.4rem .6rem; border-bottom:2px solid #e2e8f0; }
-.lg-report td { padding:.35rem .6rem; border-bottom:1px solid #f1f5f9; color:#475569; }
-.lg-report td:first-child { font-weight:500; color:#334155; width:40%; }
+    color:#475569; font-weight:600; text-align:left;
+    padding:.45rem .7rem; border-bottom:2px solid #cbd5e1; font-size:.8rem;
+    text-transform:uppercase; letter-spacing:.04em; }
+.lg-report td { padding:.4rem .7rem; border-bottom:1px solid #e2e8f0; color:#334155; vertical-align:top; }
+.lg-report td:first-child { font-weight:600; color:#0f172a; width:38%; }
+.lg-report .lg-hash { font-family:ui-monospace,monospace; font-size:.78rem;
+    word-break:break-all; color:#334155; }
 
 /* list */
-.lg-report .lg-list { padding-left:1.2rem; }
-.lg-report .lg-list li { margin:.3rem 0; color:#475569; }
+.lg-report .lg-list { padding-left:1.3rem; }
+.lg-report .lg-list li { margin:.4rem 0; color:#1e293b; font-size:.92rem; }
 
 /* framework cards */
 .lg-report .lg-fw-card {
-    background:#f8fafc; border-radius:6px; padding:.75rem 1rem;
-    margin-bottom:.5rem; border-left:3px solid #3b82f6; }
+    background:#f8fafc; border-radius:8px; padding:.9rem 1.1rem;
+    margin-bottom:.6rem; border-left:3px solid #3b82f6; }
+.lg-report .lg-fw-id {
+    display:inline-block; font-size:.72rem; font-weight:700;
+    color:#fff; background:#3b82f6; border-radius:4px;
+    padding:.1rem .45rem; margin-bottom:.35rem; letter-spacing:.03em; }
 .lg-report .lg-fw-title {
-    font-weight:600; font-size:.83rem; color:#1e293b; }
+    font-weight:600; font-size:.92rem; color:#0f172a; }
 .lg-report .lg-fw-desc {
-    font-size:.8rem; color:#64748b; margin-top:.25rem; line-height:1.5; }
+    font-size:.88rem; color:#334155; margin-top:.35rem; line-height:1.6; }
 .lg-report .lg-fw-link {
-    font-size:.75rem; color:#3b82f6; margin-top:.25rem; display:block; }
+    font-size:.78rem; color:#2563eb; margin-top:.35rem; display:block;
+    word-break:break-all; text-decoration:underline; }
 
 /* disclaimer */
 .lg-report .lg-disclaimer {
-    background:#fff7ed; border:1px solid #fed7aa;
-    border-radius:8px; padding:1rem 1.25rem; }
+    background:#fff7ed; border:1px solid #fdba74;
+    border-radius:8px; padding:1.1rem 1.25rem; }
 .lg-report .lg-disclaimer-title {
-    font-size:.78rem; font-weight:700; color:#92400e;
-    text-transform:uppercase; letter-spacing:.05em; margin-bottom:.4rem; }
+    font-size:.85rem; font-weight:700; color:#7c2d12;
+    text-transform:uppercase; letter-spacing:.04em; margin-bottom:.5rem; }
 .lg-report .lg-disclaimer-body {
-    font-size:.8rem; color:#78350f; line-height:1.55; }
+    font-size:.9rem; color:#431407; line-height:1.65; }
+.lg-report .lg-disclaimer-body strong { color:#7c2d12; }
 
 /* chart */
 .lg-report svg { width:100%; height:auto; display:block; }
 
 /* footer */
 .lg-report .lg-foot {
-    margin-top:1.5rem; padding-top:.75rem; border-top:2px solid #0f172a;
-    font-size:.7rem; color:#94a3b8; text-align:center;
+    margin-top:1.75rem; padding-top:.85rem; border-top:2px solid #0f172a;
+    font-size:.75rem; color:#64748b; text-align:center;
     font-family:ui-monospace,monospace; word-break:break-all; }"""
 
     # ── HTML builder ──────────────────────────────────────────────────────────
@@ -293,9 +302,11 @@ class LegalReportGenerator:
         for fw in _LEGAL_FRAMEWORKS:
             fw_html += (
                 f'<div class="lg-fw-card">'
-                f'<div class="lg-fw-title">[{fw["id"]}] {fw["title"]}</div>'
+                f'<span class="lg-fw-id">{fw["id"]}</span> '
+                f'<div class="lg-fw-title">{fw["title"]}</div>'
                 f'<div class="lg-fw-desc">{fw["description"]}</div>'
-                f'<a class="lg-fw-link" href="{fw["url"]}" target="_blank">{fw["url"]}</a>'
+                f'<a class="lg-fw-link" href="{fw["url"]}" target="_blank">'
+                f'&#128279; {fw["url"]}</a>'
                 f'</div>\n'
             )
 
@@ -322,11 +333,14 @@ class LegalReportGenerator:
                     f"<td>{s:.4f}</td></tr>\n"
                 )
 
+        hash_display = (file_hash[:16] + "&hellip;" + file_hash[-8:]) if file_hash else "Not computed"
+        hash_full = f'<span class="lg-hash">{file_hash}</span>' if file_hash else "Not computed"
+
         body = f"""\
 <div class="lg-header">
-  <div class="lg-title">Deep-Guard Agent — Forensic Legal Report</div>
-  <div class="lg-subtitle">Automated Audio-Visual Deepfake Analysis · ISO/IEC 27037 · NIST SP 800-86</div>
-  <div class="lg-case-id">Case Reference: {case_ref} &nbsp;·&nbsp; Generated: {generated_at}</div>
+  <div class="lg-title">Deep-Guard Agent &mdash; Forensic Legal Report</div>
+  <div class="lg-subtitle">Automated Audio-Visual Deepfake Analysis &nbsp;&middot;&nbsp; ISO/IEC 27037 &nbsp;&middot;&nbsp; NIST SP 800-86</div>
+  <div class="lg-case-id">Case Ref: {case_ref} &nbsp;&middot;&nbsp; Generated: {generated_at}</div>
 </div>
 
 <!-- 1. Case Information -->
@@ -334,9 +348,9 @@ class LegalReportGenerator:
   <div class="lg-section-title">1. Case Information</div>
   <table>
     <tr><td>Source File</td><td>{filename}</td></tr>
-    <tr><td>SHA-256 Integrity Hash</td><td style="font-family:ui-monospace,monospace;font-size:.75rem;">{file_hash or "Not computed"}</td></tr>
+    <tr><td>SHA-256 Hash</td><td>{hash_full}</td></tr>
     <tr><td>Analysis Timestamp (UTC)</td><td>{generated_at}</td></tr>
-    <tr><td>Case Reference Number</td><td style="font-family:ui-monospace,monospace;">{case_ref}</td></tr>
+    <tr><td>Case Reference</td><td class="lg-hash">{case_ref}</td></tr>
     <tr><td>Examining System</td><td>{_TOOL_NAME} v{_TOOL_VERSION}</td></tr>
   </table>
 </div>
@@ -347,7 +361,7 @@ class LegalReportGenerator:
   <div class="lg-verdict-block" style="--vc:{vc}">
     <div class="lg-verdict-badge">{analysis.verdict.upper().replace("_", " ")}</div>
     <div class="lg-verdict-body">
-      <div class="lg-verdict-conf">Confidence: {analysis.confidence:.1%} &nbsp;·&nbsp; Harm Category: {harm.replace("_"," ").title()}</div>
+      <div class="lg-verdict-conf">Confidence: {analysis.confidence:.1%} &nbsp;&middot;&nbsp; Harm Category: {harm.replace("_"," ").title()}</div>
       <div class="lg-verdict-legal">{verdict_legal}</div>
     </div>
   </div>
@@ -361,7 +375,7 @@ class LegalReportGenerator:
     <tr><td>Audio Analysis</td><td>{_AUDIO_METHOD}</td></tr>
     <tr><td>Cross-Modal Fusion</td><td>{_FUSION_METHOD}</td></tr>
     <tr><td>AI Reasoning</td><td>{_REASONING_METHOD}</td></tr>
-    <tr><td>Detection Threshold</td><td>{threshold} (scores ≥ threshold flagged as anomalous)</td></tr>
+    <tr><td>Detection Threshold</td><td>{threshold} &nbsp;(scores &ge; threshold flagged as anomalous)</td></tr>
   </table>
 </div>
 
@@ -370,11 +384,11 @@ class LegalReportGenerator:
   <div class="lg-section-title">4. Quantitative Findings</div>
   <table>
     <tr><td>Frames Analyzed</td><td>{meta.get("num_frames_analyzed", "N/A")}</td></tr>
-    <tr><td>Frames Flagged</td><td>{meta.get("num_flagged_frames", 0)} ({meta.get("flagged_ratio", 0):.1%})</td></tr>
+    <tr><td>Frames Flagged</td><td>{meta.get("num_flagged_frames", 0)} &nbsp;({meta.get("flagged_ratio", 0):.1%})</td></tr>
     <tr><td>Mean Cosine Similarity</td><td>{meta.get("mean_cosine_similarity", "N/A")}</td></tr>
-    <tr><td>Score Mean (±Std)</td><td>{stats.get("mean", "N/A"):.4f} ± {stats.get("std", "N/A"):.4f}</td></tr>
-    <tr><td>Score Range</td><td>[{stats.get("min", "N/A"):.4f}, {stats.get("max", "N/A"):.4f}]</td></tr>
-    <tr><td>Score Median</td><td>{stats.get("median", "N/A"):.4f}</td></tr>
+    <tr><td>Score Mean &plusmn; Std</td><td>{stats.get("mean", 0):.4f} &plusmn; {stats.get("std", 0):.4f}</td></tr>
+    <tr><td>Score Range</td><td>[{stats.get("min", 0):.4f}, {stats.get("max", 0):.4f}]</td></tr>
+    <tr><td>Score Median</td><td>{stats.get("median", 0):.4f}</td></tr>
   </table>
 </div>
 
@@ -384,7 +398,7 @@ class LegalReportGenerator:
   {svg_chart}
 </div>
 
-{"<!-- 4c. Flagged Frames --><div class='lg-section'><div class='lg-section-title'>Flagged Frames (Top 15 by Score)</div><table><thead><tr><th>Frame</th><th>Timestamp</th><th>Score</th></tr></thead><tbody>" + flagged_rows + "</tbody></table></div>" if flagged_rows else ""}
+{"<div class='lg-section'><div class='lg-section-title'>Flagged Frames (Top 15 by Score)</div><table><thead><tr><th>Frame</th><th>Timestamp</th><th>Score</th></tr></thead><tbody>" + flagged_rows + "</tbody></table></div>" if flagged_rows else ""}
 
 <!-- 5. Evidence Summary -->
 <div class="lg-section">
@@ -392,7 +406,7 @@ class LegalReportGenerator:
   <ul class="lg-list">
     {"".join(f"<li>{e}</li>" for e in analysis.evidence)}
   </ul>
-  {f'<p style="margin-top:.75rem;color:#475569;font-size:.85rem;"><strong>Phoneme Analysis:</strong> {analysis.phoneme_analysis}</p>' if analysis.phoneme_analysis else ""}
+  {f'<p style="margin-top:.85rem;color:#1e293b;font-size:.92rem;line-height:1.6;"><strong>Phoneme Analysis:</strong> {analysis.phoneme_analysis}</p>' if analysis.phoneme_analysis else ""}
 </div>
 
 <!-- 6. Applicable Legal Frameworks -->
@@ -408,9 +422,9 @@ class LegalReportGenerator:
     <tr><td>Evidence Received</td><td>{generated_at}</td></tr>
     <tr><td>Analysis Performed</td><td>{generated_at}</td></tr>
     <tr><td>Report Generated</td><td>{generated_at}</td></tr>
-    <tr><td>File Integrity Verified</td><td>SHA-256: {(file_hash[:32] + "...") if file_hash else "Not verified"}</td></tr>
+    <tr><td>File Integrity Verified</td><td>SHA-256: {hash_display}</td></tr>
     <tr><td>Analysis System</td><td>{_TOOL_NAME} v{_TOOL_VERSION} (automated, no human modification)</td></tr>
-    <tr><td>Processing Environment</td><td>Isolated local execution; no external data transmission of source file</td></tr>
+    <tr><td>Processing Environment</td><td>Isolated local execution; no external transmission of source file</td></tr>
   </table>
 </div>
 
@@ -422,23 +436,23 @@ class LegalReportGenerator:
 
 <!-- 9. Limitations & Disclaimer -->
 <div class="lg-section">
-  <div class="lg-section-title">9. Limitations & Legal Disclaimer</div>
+  <div class="lg-section-title">9. Limitations &amp; Legal Disclaimer</div>
   <div class="lg-disclaimer">
-    <div class="lg-disclaimer-title">⚠ Important Notice</div>
+    <div class="lg-disclaimer-title">&#9888; Important Notice</div>
     <div class="lg-disclaimer-body">
       This report is generated by an <strong>automated AI system</strong> and is provided
       for investigative and informational purposes only. It does <strong>not</strong> constitute
       legal advice, a final forensic determination, or expert witness testimony.
       <br><br>
       <strong>Limitations:</strong> Detection accuracy depends on video quality, face visibility,
-      audio clarity, and whether the deepfake technique falls within the system's detection scope.
-      Highly sophisticated synthesis methods may evade detection. The system reports a known false
+      audio clarity, and whether the deepfake technique falls within the system&rsquo;s detection scope.
+      Highly sophisticated synthesis methods may evade detection. The system has a known false
       positive/negative rate inherent to probabilistic AI analysis.
       <br><br>
       <strong>For legal proceedings:</strong> This automated report should be reviewed and
       validated by a qualified human forensic expert before submission as evidence. Courts
       applying the <em>Daubert</em> standard require independent validation, peer-reviewed
-      methodology, and documented error rates — consult qualified counsel.
+      methodology, and documented error rates &mdash; consult qualified counsel.
       <br><br>
       <strong>Privacy:</strong> The source file is processed locally. No video content is
       transmitted to external servers except for LLM reasoning (text-only analysis summary
@@ -448,7 +462,7 @@ class LegalReportGenerator:
 </div>
 
 <div class="lg-foot">
-  {filename} &middot; SHA-256 {(file_hash[:32] + "...") if file_hash else "N/A"} &middot;
+  {filename} &middot; SHA-256 {hash_display} &middot;
   {_TOOL_NAME} v{_TOOL_VERSION} &middot; Case Ref: {case_ref}
 </div>"""
 
