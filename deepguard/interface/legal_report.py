@@ -12,6 +12,7 @@ and civil/criminal proceedings as supporting documentation.
 
 from __future__ import annotations
 
+import html as _html
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -171,34 +172,36 @@ class LegalReportGenerator:
     # ── SVG chart (reuse from ReportGenerator) ────────────────────────────────
 
     def _svg_chart(self, scores: np.ndarray, threshold: float) -> str:
-        return ReportGenerator._build_svg_chart(scores, threshold)
+        return self._report_gen._build_svg_chart(scores, threshold)
 
     # ── CSS ───────────────────────────────────────────────────────────────────
 
     _CSS = """\
 .lg-report *, .lg-report *::before, .lg-report *::after {
-    margin:0; padding:0; box-sizing:border-box; }
+    margin:0; padding:0; box-sizing:border-box; color:inherit; }
 .lg-report {
-    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    color:#1e293b; line-height:1.65; padding:1.75rem 2rem; font-size:1rem; }
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif !important;
+    color:#1e293b !important; line-height:1.7; padding:1.75rem 2rem; font-size:1rem !important;
+    background:#ffffff !important; border-radius:10px; }
 
 /* header */
 .lg-report .lg-header {
     border-bottom:2px solid #0f172a; padding-bottom:1rem; margin-bottom:1.5rem; }
 .lg-report .lg-title {
-    font-size:1.05rem; font-weight:700; text-transform:uppercase;
-    letter-spacing:.04em; color:#0f172a; }
+    font-size:1.05rem !important; font-weight:700; text-transform:uppercase;
+    letter-spacing:.04em; color:#0f172a !important; }
 .lg-report .lg-subtitle {
-    font-size:.85rem; color:#475569; margin-top:.3rem; }
+    font-size:.9rem !important; color:#374151 !important; margin-top:.3rem; }
 .lg-report .lg-case-id {
-    font-family:ui-monospace,monospace; font-size:.78rem;
-    color:#475569; margin-top:.45rem; word-break:break-all; }
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.83rem !important; color:#374151 !important;
+    margin-top:.45rem; word-break:break-all; }
 
 /* section */
 .lg-report .lg-section { margin-bottom:1.75rem; }
 .lg-report .lg-section-title {
-    font-size:.78rem; font-weight:700; text-transform:uppercase;
-    letter-spacing:.07em; color:#334155; border-bottom:2px solid #e2e8f0;
+    font-size:.82rem !important; font-weight:700; text-transform:uppercase;
+    letter-spacing:.07em; color:#1e293b !important; border-bottom:2px solid #e2e8f0;
     padding-bottom:.35rem; margin-bottom:.85rem; }
 
 /* verdict block */
@@ -208,55 +211,60 @@ class LegalReportGenerator:
     border-left:4px solid var(--vc, #6b7280); }
 .lg-report .lg-verdict-badge {
     flex-shrink:0; padding:.35rem 1.1rem; border-radius:20px;
-    font-size:.88rem; font-weight:700; color:#fff;
+    font-size:.9rem !important; font-weight:700; color:#fff !important;
     background:var(--vc, #6b7280); white-space:nowrap; }
 .lg-report .lg-verdict-body { flex:1; }
 .lg-report .lg-verdict-conf {
-    font-size:.9rem; color:#475569; margin-bottom:.45rem; font-weight:500; }
+    font-size:.92rem !important; color:#374151 !important;
+    margin-bottom:.45rem; font-weight:600; }
 .lg-report .lg-verdict-legal {
-    font-size:.92rem; color:#1e293b; line-height:1.6; }
+    font-size:.93rem !important; color:#1e293b !important; line-height:1.65; }
 
 /* table */
-.lg-report table { width:100%; border-collapse:collapse; font-size:.9rem; }
+.lg-report table { width:100%; border-collapse:collapse; font-size:.92rem !important; }
 .lg-report th {
-    color:#475569; font-weight:600; text-align:left;
-    padding:.45rem .7rem; border-bottom:2px solid #cbd5e1; font-size:.8rem;
-    text-transform:uppercase; letter-spacing:.04em; }
-.lg-report td { padding:.4rem .7rem; border-bottom:1px solid #e2e8f0; color:#334155; vertical-align:top; }
-.lg-report td:first-child { font-weight:600; color:#0f172a; width:38%; }
-.lg-report .lg-hash { font-family:ui-monospace,monospace; font-size:.78rem;
-    word-break:break-all; color:#334155; }
+    color:#1e293b !important; font-weight:700; text-align:left;
+    padding:.5rem .75rem; border-bottom:2px solid #cbd5e1; font-size:.82rem !important;
+    text-transform:uppercase; letter-spacing:.04em; background:#f8fafc; }
+.lg-report td {
+    padding:.45rem .75rem; border-bottom:1px solid #e2e8f0;
+    color:#1e293b !important; vertical-align:top; font-size:.92rem !important; }
+.lg-report td:first-child { font-weight:600; color:#0f172a !important; width:38%; }
+.lg-report .lg-hash {
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.82rem !important; word-break:break-all; color:#1e293b !important; }
 
 /* list */
 .lg-report .lg-list { padding-left:1.3rem; }
-.lg-report .lg-list li { margin:.4rem 0; color:#1e293b; font-size:.92rem; }
+.lg-report .lg-list li { margin:.4rem 0; color:#1e293b !important; font-size:.93rem !important; }
 
 /* framework cards */
 .lg-report .lg-fw-card {
-    background:#f8fafc; border-radius:8px; padding:.9rem 1.1rem;
-    margin-bottom:.6rem; border-left:3px solid #3b82f6; }
+    background:#f8fafc; border-radius:8px; padding:.95rem 1.15rem;
+    margin-bottom:.65rem; border-left:3px solid #3b82f6; }
 .lg-report .lg-fw-id {
-    display:inline-block; font-size:.72rem; font-weight:700;
-    color:#fff; background:#3b82f6; border-radius:4px;
-    padding:.1rem .45rem; margin-bottom:.35rem; letter-spacing:.03em; }
+    display:inline-block; font-size:.78rem !important; font-weight:700;
+    color:#fff !important; background:#2563eb; border-radius:4px;
+    padding:.15rem .5rem; margin-bottom:.4rem; letter-spacing:.03em; }
 .lg-report .lg-fw-title {
-    font-weight:600; font-size:.92rem; color:#0f172a; }
+    font-weight:700; font-size:.93rem !important; color:#0f172a !important; }
 .lg-report .lg-fw-desc {
-    font-size:.88rem; color:#334155; margin-top:.35rem; line-height:1.6; }
+    font-size:.9rem !important; color:#1e293b !important;
+    margin-top:.4rem; line-height:1.65; }
 .lg-report .lg-fw-link {
-    font-size:.78rem; color:#2563eb; margin-top:.35rem; display:block;
-    word-break:break-all; text-decoration:underline; }
+    font-size:.83rem !important; color:#2563eb !important; margin-top:.4rem;
+    display:block; word-break:break-all; text-decoration:underline; }
 
 /* disclaimer */
 .lg-report .lg-disclaimer {
-    background:#fff7ed; border:1px solid #fdba74;
-    border-radius:8px; padding:1.1rem 1.25rem; }
+    background:#fff7ed; border:1px solid #f97316;
+    border-radius:8px; padding:1.15rem 1.3rem; }
 .lg-report .lg-disclaimer-title {
-    font-size:.85rem; font-weight:700; color:#7c2d12;
-    text-transform:uppercase; letter-spacing:.04em; margin-bottom:.5rem; }
+    font-size:.88rem !important; font-weight:700; color:#7c2d12 !important;
+    text-transform:uppercase; letter-spacing:.04em; margin-bottom:.55rem; }
 .lg-report .lg-disclaimer-body {
-    font-size:.9rem; color:#431407; line-height:1.65; }
-.lg-report .lg-disclaimer-body strong { color:#7c2d12; }
+    font-size:.92rem !important; color:#431407 !important; line-height:1.7; }
+.lg-report .lg-disclaimer-body strong { color:#7c2d12 !important; }
 
 /* chart */
 .lg-report svg { width:100%; height:auto; display:block; }
@@ -264,8 +272,8 @@ class LegalReportGenerator:
 /* footer */
 .lg-report .lg-foot {
     margin-top:1.75rem; padding-top:.85rem; border-top:2px solid #0f172a;
-    font-size:.75rem; color:#64748b; text-align:center;
-    font-family:ui-monospace,monospace; word-break:break-all; }"""
+    font-size:.8rem !important; color:#374151 !important; text-align:center;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; word-break:break-all; }"""
 
     # ── HTML builder ──────────────────────────────────────────────────────────
 
@@ -311,10 +319,11 @@ class LegalReportGenerator:
             )
 
         # ── Recommended legal actions ────────────────────────────────────────
+        # legal_steps are constants (safe); LLM-generated actions must be escaped
         legal_actions_html = "\n".join(f"<li>{s}</li>" for s in legal_steps)
         if analysis.recommended_actions:
             for a in analysis.recommended_actions:
-                legal_actions_html += f"<li>{a}</li>"
+                legal_actions_html += f"<li>{_html.escape(a)}</li>"
 
         # ── Flagged frames table ─────────────────────────────────────────────
         flagged_rows = ""
@@ -404,9 +413,9 @@ class LegalReportGenerator:
 <div class="lg-section">
   <div class="lg-section-title">5. Evidence Summary</div>
   <ul class="lg-list">
-    {"".join(f"<li>{e}</li>" for e in analysis.evidence)}
+    {"".join(f"<li>{_html.escape(e)}</li>" for e in analysis.evidence)}
   </ul>
-  {f'<p style="margin-top:.85rem;color:#1e293b;font-size:.92rem;line-height:1.6;"><strong>Phoneme Analysis:</strong> {analysis.phoneme_analysis}</p>' if analysis.phoneme_analysis else ""}
+  {f'<p style="margin-top:.85rem;color:#1e293b;font-size:.92rem;line-height:1.6;"><strong>Phoneme Analysis:</strong> {_html.escape(analysis.phoneme_analysis)}</p>' if analysis.phoneme_analysis else ""}
 </div>
 
 <!-- 6. Applicable Legal Frameworks -->
@@ -477,8 +486,7 @@ class LegalReportGenerator:
         source_file: str | None = None,
     ) -> str:
         """Return embeddable HTML fragment for Gradio gr.HTML."""
-        report_gen = ReportGenerator()
-        file_hash = report_gen._compute_file_hash(source_file) if source_file else None
+        file_hash = self._report_gen._compute_file_hash(source_file) if source_file else None
         case_ref = str(uuid.uuid4()).upper()
         generated_at = self._now_utc()
 
@@ -495,8 +503,7 @@ class LegalReportGenerator:
         source_file: str | None = None,
     ) -> str:
         """Export as a standalone HTML file."""
-        report_gen = ReportGenerator()
-        file_hash = report_gen._compute_file_hash(source_file) if source_file else None
+        file_hash = self._report_gen._compute_file_hash(source_file) if source_file else None
         case_ref = str(uuid.uuid4()).upper()
         generated_at = self._now_utc()
 

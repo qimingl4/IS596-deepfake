@@ -118,6 +118,15 @@ def _create_client(provider: str, api_key: str | None = None, base_url: str | No
         return OpenAI(**kwargs)
 
 
+def _score_to_verdict(score: float) -> str:
+    """Convert a numeric mismatch score to a verdict string."""
+    if score < 0.3:
+        return "authentic"
+    if score < 0.6:
+        return "suspicious"
+    return "likely_fake"
+
+
 class LLMReasoner:
     """Uses an LLM to reason about detection results and generate explanations."""
 
@@ -192,14 +201,7 @@ class LLMReasoner:
     def _parse_response(self, raw: str, fusion_result: FusionResult) -> AnalysisReport:
         """Parse the LLM JSON response into an AnalysisReport."""
         score = fusion_result.overall_score
-
-        # Score-based verdict as fallback
-        if score < 0.3:
-            default_verdict = "authentic"
-        elif score < 0.6:
-            default_verdict = "suspicious"
-        else:
-            default_verdict = "likely_fake"
+        default_verdict = _score_to_verdict(score)
 
         try:
             # Try to extract JSON from the response
@@ -273,12 +275,7 @@ class LLMReasoner:
             logger.error("LLM call failed: %s", e)
             # Return a fallback report based on detection scores alone
             score = fusion_result.overall_score
-            if score < 0.3:
-                verdict = "authentic"
-            elif score < 0.6:
-                verdict = "suspicious"
-            else:
-                verdict = "likely_fake"
+            verdict = _score_to_verdict(score)
 
             return AnalysisReport(
                 summary=(

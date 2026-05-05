@@ -21,7 +21,8 @@ from transformers import Wav2Vec2Model, Wav2Vec2Processor
 logger = logging.getLogger(__name__)
 
 # Bilabial phonemes that require lip closure — key detection signals
-BILABIAL_PHONEMES = {"B", "P", "M", "b", "p", "m"}
+# Stored upper-case only; lookup always uses .upper() before checking.
+BILABIAL_PHONEMES = {"B", "P", "M"}
 
 # Wav2Vec2 produces one frame per 20ms of audio
 WAV2VEC2_FRAME_RATE = 50.0  # frames per second
@@ -124,6 +125,11 @@ class AudioArticulatoryEncoder:
 
             waveform, sr = librosa.load(wav_path, sr=target_sr, mono=True)
             return waveform, sr
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(
+                "ffmpeg timed out after 60 s while extracting audio. "
+                "The video may be too long or the system is under heavy load."
+            )
         except FileNotFoundError:
             # ffmpeg not installed — fall back to librosa direct load
             logger.warning("ffmpeg not found, falling back to librosa for audio extraction")
@@ -285,9 +291,13 @@ class AudioArticulatoryEncoder:
             # MFA requires a .wav file — export if input is video
             if suffix in (".mp4", ".avi", ".mov", ".mkv"):
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                    mfa_wav_path = f.name
+                try:
                     import soundfile as sf
-                    sf.write(f.name, waveform, sr)
-                    phoneme_segments = self.run_mfa_alignment(f.name, transcript)
+                    sf.write(mfa_wav_path, waveform, sr)
+                    phoneme_segments = self.run_mfa_alignment(mfa_wav_path, transcript)
+                finally:
+                    Path(mfa_wav_path).unlink(missing_ok=True)
             else:
                 phoneme_segments = self.run_mfa_alignment(media_path, transcript)
 

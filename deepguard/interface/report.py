@@ -7,6 +7,7 @@ Supports JSON, plain-text, and HTML output formats.
 from __future__ import annotations
 
 import hashlib
+import html as _html
 import json
 import logging
 from datetime import datetime, timezone
@@ -292,8 +293,12 @@ class ReportGenerator:
         # Build SVG chart (pure markup, no JS)
         svg_chart = self._build_svg_chart(scores, threshold)
 
-        evidence_html = "\n".join(f"<li>{e}</li>" for e in analysis.evidence)
-        actions_html = "\n".join(f"<li>{a}</li>" for a in analysis.recommended_actions) if analysis.recommended_actions else "<li>No specific actions recommended</li>"
+        evidence_html = "\n".join(f"<li>{_html.escape(e)}</li>" for e in analysis.evidence)
+        actions_html = (
+            "\n".join(f"<li>{_html.escape(a)}</li>" for a in analysis.recommended_actions)
+            if analysis.recommended_actions
+            else "<li>No specific actions recommended</li>"
+        )
 
         flagged_rows = ""
         if fusion_result.flagged_frames:
@@ -309,17 +314,13 @@ class ReportGenerator:
 
         # ── Stat pills ──
         meta = report['detection_metadata']
+        cos_sim = meta.get("mean_cosine_similarity")
+        cos_pill = f'<span class="dg-pill">Cos-sim {cos_sim:.3f}</span>' if isinstance(cos_sim, (int, float)) else ""
         stats_html = (
             f'<span class="dg-pill">Frames {meta.get("num_frames_analyzed","?")}</span>'
             f'<span class="dg-pill">Flagged {meta.get("num_flagged_frames","0")}'
             f' ({meta.get("flagged_ratio",0):.0%})</span>'
-            f'<span class="dg-pill">Cos-sim {meta.get("mean_cosine_similarity","?"):.3f}</span>'
-            if isinstance(meta.get("mean_cosine_similarity"), (int, float))
-            else (
-                f'<span class="dg-pill">Frames {meta.get("num_frames_analyzed","?")}</span>'
-                f'<span class="dg-pill">Flagged {meta.get("num_flagged_frames","0")}'
-                f' ({meta.get("flagged_ratio",0):.0%})</span>'
-            )
+            + cos_pill
         )
 
         body = f"""\
@@ -331,7 +332,7 @@ class ReportGenerator:
       <span class="dg-conf">{analysis.confidence:.0%} confidence</span>
       {f'<span class="dg-harm">{analysis.harm_category}</span>' if analysis.harm_category else ''}
     </div>
-    <p class="dg-summary">{analysis.summary}</p>
+    <p class="dg-summary">{_html.escape(analysis.summary)}</p>
     <div class="dg-pills">{stats_html}</div>
   </div>
 
@@ -347,7 +348,7 @@ class ReportGenerator:
     <ul class="dg-list">{evidence_html}</ul>
   </div>
 
-  {"<div class='dg-section'><h3>Phoneme Analysis</h3><p>" + analysis.phoneme_analysis + "</p></div>" if analysis.phoneme_analysis else ""}
+  {"<div class='dg-section'><h3>Phoneme Analysis</h3><p>" + _html.escape(analysis.phoneme_analysis) + "</p></div>" if analysis.phoneme_analysis else ""}
 
   <!-- actions -->
   <div class="dg-section">
@@ -370,13 +371,14 @@ class ReportGenerator:
 
     _CSS = """\
   .dg-report *, .dg-report *::before, .dg-report *::after {
-      margin:0; padding:0; box-sizing:border-box; }
+      margin:0; padding:0; box-sizing:border-box; color:inherit; }
   .dg-report {
-      font-family: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-      color:#1e293b; line-height:1.55; padding:1.5rem 1.75rem; }
+      font-family: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif !important;
+      color:#1e293b !important; line-height:1.55; padding:1.5rem 1.75rem;
+      background:#ffffff !important; border-radius:10px; }
   .dg-report h3 {
-      font-size:.8rem; font-weight:600; text-transform:uppercase;
-      letter-spacing:.06em; color:#64748b; margin-bottom:.6rem; }
+      font-size:.85rem !important; font-weight:600; text-transform:uppercase;
+      letter-spacing:.06em; color:#1e293b !important; margin-bottom:.6rem; }
   /* verdict banner */
   .dg-report .dg-banner {
       background:#f8fafc; border-radius:10px; padding:1.25rem 1.5rem; margin-bottom:1.25rem; }
@@ -384,31 +386,31 @@ class ReportGenerator:
   .dg-report .dg-badge {
       display:inline-block; padding:.25rem .9rem; border-radius:20px;
       font-size:.82rem; font-weight:700; color:#fff; letter-spacing:.03em; }
-  .dg-report .dg-conf { font-size:.85rem; color:#64748b; font-weight:500; }
+  .dg-report .dg-conf { font-size:.88rem !important; color:#374151 !important; font-weight:600; }
   .dg-report .dg-harm {
-      font-size:.75rem; color:#64748b; background:#f1f5f9;
+      font-size:.82rem !important; color:#1e293b !important; background:#e2e8f0;
       padding:.2rem .6rem; border-radius:4px; }
-  .dg-report .dg-summary { margin-top:.7rem; font-size:.92rem; color:#334155; }
+  .dg-report .dg-summary { margin-top:.7rem; font-size:.93rem !important; color:#1e293b !important; }
   .dg-report .dg-pills { display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.8rem; }
   .dg-report .dg-pill {
-      font-size:.72rem; font-weight:500; color:#475569; background:#e2e8f0;
+      font-size:.8rem !important; font-weight:500; color:#1e293b !important; background:#e2e8f0;
       padding:.2rem .55rem; border-radius:4px; white-space:nowrap; }
   /* sections */
   .dg-report .dg-section { margin-bottom:1.25rem; }
-  .dg-report .dg-section p { font-size:.88rem; color:#475569; }
-  .dg-report .dg-list { padding-left:1.2rem; font-size:.88rem; color:#475569; }
-  .dg-report .dg-list li { margin:.25rem 0; }
+  .dg-report .dg-section p { font-size:.9rem !important; color:#1e293b !important; }
+  .dg-report .dg-list { padding-left:1.2rem; font-size:.9rem !important; color:#1e293b !important; }
+  .dg-report .dg-list li { margin:.25rem 0; color:#1e293b !important; }
   /* chart */
   .dg-report svg { max-width:100%; height:auto; display:block; }
   /* table */
-  .dg-report table { width:100%; border-collapse:collapse; font-size:.82rem; }
-  .dg-report th { color:#94a3b8; font-weight:600; text-align:left;
-      padding:.4rem .6rem; border-bottom:2px solid #e2e8f0; }
-  .dg-report td { padding:.35rem .6rem; border-bottom:1px solid #f1f5f9; color:#475569; }
+  .dg-report table { width:100%; border-collapse:collapse; font-size:.88rem !important; }
+  .dg-report th { color:#1e293b !important; font-weight:700; text-align:left;
+      padding:.4rem .6rem; border-bottom:2px solid #cbd5e1; background:#f8fafc; }
+  .dg-report td { padding:.4rem .6rem; border-bottom:1px solid #e2e8f0; color:#1e293b !important; }
   /* footer */
   .dg-report .dg-foot {
       margin-top:1.5rem; padding-top:.75rem; border-top:1px solid #e2e8f0;
-      font-size:.7rem; color:#94a3b8; text-align:center;
+      font-size:.78rem !important; color:#374151 !important; text-align:center;
       font-family:ui-monospace,monospace; word-break:break-all; }"""
 
     def to_html_embed(

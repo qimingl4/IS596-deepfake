@@ -7,6 +7,8 @@ detection, viewing annotated results, and downloading forensic reports.
 from __future__ import annotations
 
 import logging
+import threading
+import uuid
 from pathlib import Path
 
 import gradio as gr
@@ -127,8 +129,12 @@ class DeepGuardPipeline:
         self.temp_dir = Path(app_cfg.get("temp_dir", "/tmp/deepguard"))
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
-    def analyze(self, video_path: str) -> tuple[str, str, str, str]:
+    def analyze(self, video_path: str, run_id: str | None = None) -> tuple[str, str, str, str]:
         """Run the full detection pipeline on a video.
+
+        Args:
+            video_path: Path to the input video file.
+            run_id: Optional unique identifier for this run (used for output filenames).
 
         Returns:
             (annotated_video_path, report_html, legal_html, report_json_path)
@@ -196,10 +202,11 @@ class DeepGuardPipeline:
         # Step 5: Generate outputs
         logger.info("Rendering annotated video and reports...")
 
-        annotated_path = str(self.temp_dir / "annotated_output.mp4")
+        rid = run_id or uuid.uuid4().hex[:8]
+        annotated_path = str(self.temp_dir / f"annotated_{rid}.mp4")
         self.overlay.render_video(video_path, annotated_path, fusion_result, lip_features)
 
-        json_path = str(self.temp_dir / "report.json")
+        json_path = str(self.temp_dir / f"report_{rid}.json")
         self.report_gen.to_json(fusion_result, analysis, json_path, source_file=video_path)
 
         html_content = self.report_gen.to_html_embed(
@@ -220,11 +227,15 @@ class DeepGuardPipeline:
 def create_app() -> gr.Blocks:
     """Create the Gradio web interface."""
     pipeline = None
+    _pipeline_lock = threading.Lock()
 
     def initialize_pipeline():
         nonlocal pipeline
+        # Double-checked locking: cheap check before acquiring lock
         if pipeline is None:
-            pipeline = DeepGuardPipeline()
+            with _pipeline_lock:
+                if pipeline is None:
+                    pipeline = DeepGuardPipeline()
 
     _PLACEHOLDER = (
         '<p style="color:#94a3b8;text-align:center;padding:3rem 1rem;'

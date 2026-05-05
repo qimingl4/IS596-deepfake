@@ -1,0 +1,11 @@
+pid,age_group,gender,background,education,prior_tool_use,ai_familiarity,df_familiarity,tool_familiarity,baseline_a_correct,baseline_b_correct,sus1,sus2,sus3,sus4,sus5,sus6,sus7,sus8,sus9,sus10,r1,r2,r3,r4,l1,l2,l3,l4,t1,t2,t3,t4,s1,s2,task1_time,task1_completed,task1_agree,task1_confidence,task2_time,task2_completed,task2_agree,task2_confidence,task3_time,task3_completed,task3_agree,task3_confidence,theme_clear_verdict,theme_confusing_terms,theme_trust_ai,theme_distrust_ai,theme_legal_useful,theme_legal_jargon,theme_timeline_helpful,theme_timeline_confusing,theme_slow_speed,theme_want_more_detail
+P01,18-24,M,Computer Science,Bachelor,No,6,4,2,1,0,4,2,4,1,4,2,5,2,4,2,5,5,5,4,4,4,4,3,5,4,5,4,5,5,282,1,1,6,315,1,1,5,348,1,1,5,1,0,1,0,0,0,1,0,0,1
+P02,18-24,F,Social Science,Bachelor,No,3,3,1,0,1,3,3,3,3,3,3,4,3,3,3,3,3,4,2,4,4,3,3,5,4,5,5,4,3,381,1,1,4,423,1,1,4,458,0.5,0.5,3,0,1,1,0,1,1,0,1,1,0
+P03,18-24,M,Information Systems,Bachelor,No,5,5,3,1,1,4,2,4,2,4,2,5,2,4,2,6,5,6,5,5,5,4,5,5,5,5,4,5,5,218,1,1,6,257,1,1,6,308,1,1,5,1,0,1,0,1,0,1,0,0,1
+P04,18-24,F,Journalism,Bachelor,No,4,4,1,1,0,4,2,4,3,3,2,4,2,3,3,4,4,4,3,5,6,5,5,5,5,5,4,5,4,312,1,1,5,343,1,1,5,392,1,0.5,4,1,1,0,0,1,0,1,0,0,0
+P05,22-25,F,Law,Master,No,2,3,1,0,0,3,3,3,3,3,2,3,3,3,3,3,3,3,2,6,7,6,6,6,5,6,5,5,5,421,1,1,4,479,1,1,5,512,1,0.5,4,0,1,0,1,1,0,0,0,1,1
+P06,18-24,M,Computer Science,Bachelor,Yes,7,6,4,1,1,5,2,5,1,4,2,5,1,5,2,6,6,6,6,5,5,5,5,4,5,5,4,6,6,191,1,1,7,213,1,1,7,252,1,1,6,1,0,0,1,0,0,1,0,0,1
+P07,18-24,M,Business,Bachelor,No,4,2,1,0,1,4,2,4,2,3,2,4,2,4,2,4,4,4,3,4,4,4,4,5,4,4,4,4,4,334,1,1,4,361,1,1,4,403,1,0,3,1,0,1,0,0,1,0,1,1,0
+P08,18-24,F,Psychology,Bachelor,No,3,4,1,1,0,3,3,3,3,4,2,4,2,3,3,4,3,3,3,4,4,4,3,5,5,5,4,4,4,352,1,1,5,391,1,1,4,431,1,0.5,3,0,1,0,0,0,1,0,1,0,1
+P09,22-25,M,Information Systems,Master,No,6,5,3,1,1,4,2,5,1,4,1,5,2,4,1,6,5,6,5,5,5,5,5,5,5,5,5,6,5,213,1,1,7,241,1,1,6,283,1,1,6,1,0,1,0,1,0,1,0,0,0
+P10,18-24,F,Communication,Bachelor,No,3,3,1,0,0,3,3,4,2,3,2,4,2,3,3,4,3,4,3,5,5,5,4,5,5,4,4,4,4,353,1,1,4,382,1,0.5,4,0.5,0.5,0,3,1,0,1,0,1,1,0,1,1,0

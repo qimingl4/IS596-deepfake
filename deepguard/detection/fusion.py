@@ -25,7 +25,7 @@ class FusionResult:
     """Result of cross-modal audio-visual fusion analysis."""
 
     discrepancy_scores: np.ndarray   # (T,) per-frame mismatch scores in [0, 1]
-    heatmap: np.ndarray              # (T, H, W) spatial discrepancy heatmap (if available)
+    heatmap: np.ndarray              # (T,) temporal discrepancy heatmap (copy of scores)
     flagged_frames: list[int]        # Frame indices exceeding the threshold
     overall_score: float             # Aggregated deepfake probability
     metadata: dict
@@ -100,14 +100,11 @@ class AudioVisualProjector(nn.Module):
         v_proj = self.visual_proj(visual_features)
 
         if self.use_temporal_attention:
-            # Apply temporal attention to the concatenated representation
-            combined = torch.cat([a_proj, v_proj], dim=-1)
-            # Use attention on each projection separately for richer context
+            # Apply temporal attention to each modality separately for richer context
             a_proj = self.temporal_attn(a_proj)
             v_proj = self.temporal_attn(v_proj)
-            combined = torch.cat([a_proj, v_proj], dim=-1)
-        else:
-            combined = torch.cat([a_proj, v_proj], dim=-1)
+
+        combined = torch.cat([a_proj, v_proj], dim=-1)
 
         scores = self.discrepancy_head(combined).squeeze(-1)  # (T,)
         return a_proj, v_proj, scores

@@ -168,11 +168,13 @@ class VideoOverlay:
         fusion_result: FusionResult,
         lip_features: LipFeatures | None = None,
         fps: float = 25.0,
+        flagged_set: set[int] | None = None,
     ) -> np.ndarray:
         """Render detection overlay on a single video frame."""
         output = frame.copy()
         scores = fusion_result.discrepancy_scores
-        is_flagged = frame_idx in fusion_result.flagged_frames
+        # Use pre-computed set when available for O(1) lookup instead of O(n) list scan
+        is_flagged = (frame_idx in flagged_set) if flagged_set is not None else (frame_idx in fusion_result.flagged_frames)
 
         if frame_idx < len(scores):
             score = float(scores[frame_idx])
@@ -201,27 +203,37 @@ class VideoOverlay:
     ) -> str:
         """Render detection overlay on an entire video and save to output_path."""
         cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise RuntimeError(f"Cannot open video for annotation: {video_path}")
+
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         writer = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        if not writer.isOpened():
+            cap.release()
+            raise RuntimeError(f"Cannot create output video writer: {output_path}")
 
         # Build a quick lookup from frame_index -> LipFeatures
         lip_lookup: dict[int, LipFeatures] = {}
         if lip_features_list:
             lip_lookup = {lf.frame_index: lf for lf in lip_features_list}
 
+        # Pre-compute flagged frames as a set for O(1) lookup per frame
+        flagged_set: set[int] = set(fusion_result.flagged_frames)
+
         frame_idx = 0
-        while cap.isOpened():
+        while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
             lip_feat = lip_lookup.get(frame_idx)
             annotated = self.render_frame(
-                frame, frame_idx, fusion_result, lip_feat, fps
+                frame, frame_idx, fusion_result, lip_feat, fps,
+                flagged_set=flagged_set,
             )
             writer.write(annotated)
             frame_idx += 1
