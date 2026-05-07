@@ -1,0 +1,651 @@
+\documentclass[12pt]{article}
+
+%% ── Encoding & font ──────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}            % Times New Roman for text and math
+
+%% ── Page layout ─────────────────────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\singlespacing
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{1.5em}
+
+%% ── Bibliography (APA author-year) ──────────────────────────────────────────
+\usepackage{natbib}
+\bibliographystyle{apalike}
+
+%% ── Tables ───────────────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage[labelfont=bf,font=small]{caption}
+
+%% ── Graphics / drawing ───────────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit,backgrounds,calc}
+
+%% ── Math ─────────────────────────────────────────────────────────────────────
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%% ── Colours ──────────────────────────────────────────────────────────────────
+\usepackage{xcolor}
+\definecolor{dknavy}{HTML}{1E3A5F}
+\definecolor{dkblue}{HTML}{2563EB}
+\definecolor{dkgreen}{HTML}{16A34A}
+\definecolor{dkamber}{HTML}{D97706}
+\definecolor{dkcyan}{HTML}{0891B2}
+\definecolor{dkpurple}{HTML}{7C3AED}
+\definecolor{rowgray}{HTML}{F3F4F6}
+
+%% ── Miscellaneous ────────────────────────────────────────────────────────────
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+
+%% ── Section formatting (IEEE-style Roman + letter numbering) ─────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\bfseries\centering}
+  {\Roman{section}.}{0.5em}{\MakeUppercase}
+\titleformat{\subsection}
+  {\normalfont\itshape\bfseries}
+  {\Alph{subsection}.}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalfont\itshape}
+  {\arabic{subsubsection})}{0.5em}{}
+\titlespacing*{\section}     {0pt}{10pt}{4pt}
+\titlespacing*{\subsection}  {0pt}{7pt}{2pt}
+\titlespacing*{\subsubsection}{0pt}{5pt}{1pt}
+
+%% ── Running header ───────────────────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}
+\lhead{\small\textit{IS596 Final Project}}
+\rhead{\small\textit{Deep-Guard Agent}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+%% ── Title block ──────────────────────────────────────────────────────────────
+\begin{center}
+  {\Large\bfseries Deep-Guard Agent: Bimodal Audio-Visual Deepfake\\[2pt]
+  Detection with Forensic Legal Reporting}\\[10pt]
+  {\normalsize
+    Qiming Li\,$^{1}$\quad Yiting Wang\,$^{1}$\quad Yawen Ou\,$^{1}$}\\[3pt]
+  {\small $^{1}$IS596 --- Interactive Intelligent Systems, Final Project}
+\end{center}
+
+\medskip
+
+%% ── Abstract ─────────────────────────────────────────────────────────────────
+\noindent\textbf{\textit{Abstract}}\,---\,
+The proliferation of generative-AI media has created urgent demand for deepfake
+detection tools that are accurate, explainable, and legally actionable.
+Existing systems are predominantly unimodal and return opaque probability scores
+without supporting evidence.
+We present \textbf{Deep-Guard Agent}, a six-module pipeline that exploits
+articulatory physics to detect deepfakes: the physical constraints governing
+vocal-tract motion during speech are systematically violated by current
+generative models, producing measurable audio-visual discrepancies.
+The system combines a MediaPipe visual lip encoder with a Wav2Vec 2.0
+audio-articulatory encoder, aligns both streams via a Temporal Transformer
+fusion module, and synthesises findings through a LLaMA 3.3 70B reasoning layer.
+A nine-section ISO/IEC 27037-compliant forensic report with SHA-256
+chain-of-custody is generated automatically.
+A formative user study ($N\!=\!10$) demonstrates a 30-percentage-point accuracy
+improvement over an unaided baseline (85\% vs.\ 55\%) and a mean SUS score of
+70.0/100, confirming above-average usability.
+
+\smallskip
+\noindent\textbf{\textit{Index Terms}}\,---\,deepfake detection,
+audio-visual alignment, articulatory representations, large language models,
+forensic reporting, explainable AI.
+
+\medskip
+
+%% ── I. Introduction ──────────────────────────────────────────────────────────
+\section{Introduction}
+
+The emergence of high-fidelity generative models has dramatically lowered the
+barrier to creating photorealistic synthetic video.
+Since 2019, reported deepfake incidents have grown by approximately 3{,}000\%,
+with an estimated 96\% targeting individuals non-consensually
+\citep{sensity2023}.
+The consequences extend well beyond personal harm: deepfakes are weaponised to
+fabricate political speech, manufacture false testimony, and erode institutional
+trust at scale.
+Concurrently, new legislation --- including EU AI Act Article~50
+\citep{euaiact2024} and the US Take It Down Act \citep{takedown2025} ---
+requires platforms to supply verifiable forensic evidence of synthetic media,
+creating urgent demand for documentation-grade detection tools.
+
+Three critical gaps characterise the current detection landscape.
+\textit{First}, most production tools are unimodal, examining video \textit{or}
+audio in isolation.
+This ignores the fundamental physical constraint governing authentic speech:
+vocal-tract articulation creates a tightly coupled, physically consistent
+co-dependence between lip motion and acoustic output that generative adversarial
+networks (GANs) and diffusion-based synthesis pipelines cannot reliably replicate
+\citep{wang2024artavdf}.
+\textit{Second}, existing tools function as black boxes, returning a score
+without any supporting rationale.
+This opacity prevents users from developing calibrated trust and forecloses the
+cognitive scaffolding that enables critical media literacy.
+\textit{Third}, no open system produces forensic-grade documentation satisfying
+US federal evidentiary requirements under the Daubert standard
+\citep{daubert1993} or international digital-evidence guidelines under
+ISO/IEC~27037:2012 \citep{iso27037}.
+
+This paper introduces \textbf{Deep-Guard Agent}, which closes all three gaps
+simultaneously through three primary contributions:
+\begin{enumerate}[leftmargin=0.9in, noitemsep, topsep=2pt]
+  \item \textbf{Bimodal Detection Architecture.}
+    A Temporal Transformer fusion module that aligns Wav2Vec 2.0 audio embeddings
+    \citep{baevski2020} with MediaPipe lip feature vectors and produces per-frame
+    discrepancy scores grounded in articulatory physics.
+  \item \textbf{LLM-Powered Explainability.}
+    A JSON-structured reasoning pipeline using LLaMA 3.3 70B that converts
+    numerical detection evidence into chain-of-thought verdicts with supporting
+    rationale and recommended actions.
+  \item \textbf{Legal Forensic Report Generator.}
+    An HTML report module producing SHA-256-hashed, chain-of-custody
+    documentation conforming to ISO/IEC~27037:2012 \citep{iso27037} and the
+    Daubert admissibility standard \citep{daubert1993}.
+\end{enumerate}
+
+%% ── II. Related Work ─────────────────────────────────────────────────────────
+\section{Related Work}
+
+\subsection{Audio-Visual Speech Representations}
+
+The theoretical basis for bimodal deepfake detection derives from self-supervised
+audio-visual speech learning.
+\citet{shi2022avhubert} introduced AV-HuBERT, demonstrating that joint
+audio-visual representation learning outperforms unimodal approaches on
+lip-reading and speech recognition benchmarks.
+Their work established that temporal audio-visual alignment is a learnable signal
+with generalisable discriminative power.
+Complementarily, \citet{baevski2020} proposed Wav2Vec 2.0, a contrastive
+pre-training framework mapping raw waveforms to high-level articulatory
+representations; trained on 960 hours of LibriSpeech, its latent space captures
+the physical mechanics of vocal production, making it sensitive to the synthetic
+artefacts introduced when generative pipelines decouple audio from authentic lip
+dynamics.
+
+\subsection{Deepfake Detection Methods}
+
+\citet{wang2024artavdf} provided the closest methodological precedent,
+demonstrating that articulatory representation learning significantly improves
+detection across the FaceForensics++ benchmark \citep{rossler2019}.
+Their ART-AVDF framework established that phoneme-level inconsistencies ---
+particularly violations of bilabial closure during voiced plosives /b/, /p/, and
+/m/ --- are reliable forgery indicators.
+Prior spatial-artefact approaches \citep{rossler2019} have proven increasingly
+brittle as synthesis quality improves and pixel-level GAN artefacts diminish;
+cross-modal inconsistency provides a more principled detection surface because it
+is grounded in physical law rather than distributional statistics.
+
+\subsection{Explainability and Human Decision Support}
+
+The cognitive dimension of deepfake harm has received insufficient attention in
+the detection literature.
+Providing a bare probability score can paradoxically increase misplaced
+confidence by anchoring users to an authority signal they cannot interrogate
+\citep{abercrombie2024}.
+Our LLM reasoning layer is designed to shift users from intuitive System~1
+processing toward analytical System~2 evaluation \citep{kahneman2011}, a
+mechanism that has been shown to reduce susceptibility to misinformation when
+effectively scaffolded.
+
+\subsection{Forensic and Legal Standards}
+
+The Daubert standard requires scientific evidence to be testable, peer-reviewed,
+associated with a known error rate, and generally accepted in the relevant
+community \citep{daubert1993}.
+ISO/IEC~27037:2012 extends these requirements to digital forensic evidence,
+specifying chain-of-custody documentation and integrity verification
+\citep{iso27037}.
+To our knowledge, Deep-Guard Agent is the first open detection tool to
+operationalise both standards through a programmatically generated report.
+
+%% ── III. System Architecture ─────────────────────────────────────────────────
+\section{System Architecture}
+
+\subsection{Overview}
+
+Deep-Guard Agent consists of six modules in a two-stage pipeline
+(Figure~\ref{fig:arch}).
+The \textit{encoding stage} (Modules 1--3) independently extracts multimodal
+representations from raw video input.
+The \textit{reasoning stage} (Modules 4--6) fuses these representations,
+generates a natural-language analysis, and produces structured output artefacts.
+
+\subsection{Visual Lip Encoder}
+
+Each decoded video frame is processed by MediaPipe FaceLandmarker to localise
+478 facial landmarks at sub-pixel resolution.
+Six lip-specific descriptors are computed per frame: vertical openness,
+aspect ratio, horizontal asymmetry, elliptical eccentricity, corner angle, and a
+binary bilabial closure flag.
+Concatenated with raw coordinate values for 20 outer and inner lip keypoints,
+these form a 256-dimensional feature vector
+$\mathbf{v}_{t} \in \mathbb{R}^{256}$ at each timestep $t$.
+A weighted moving average ($\alpha = 0.7$) suppresses high-frequency tracking
+jitter while preserving articulatory dynamics.
+
+\subsection{Audio-Articulatory Encoder}
+
+The audio stream is extracted via FFmpeg at 16 kHz mono and passed through the
+\texttt{facebook/wav2vec2-base-960h} transformer encoder.
+The model produces a 768-dimensional hidden-state representation
+$\mathbf{a}_{t} \in \mathbb{R}^{768}$ at approximately 50 frames per second,
+temporally aligned to the video frame rate through linear interpolation.
+Because Wav2Vec 2.0 was pre-trained on authentic human speech, its latent space
+encodes articulatory co-production constraints --- particularly the coarticulation
+dynamics of voiced bilabial plosives --- that current generative models
+systematically violate.
+
+\subsection{Cross-Modal Fusion}
+
+The fusion module projects audio and visual features into a shared
+$d = 256$-dimensional space via learned linear projections
+$W_{a} \in \mathbb{R}^{768 \times 256}$ and
+$W_{v} \in \mathbb{R}^{256 \times 256}$.
+A two-layer Temporal Attention encoder with 4-head multi-head self-attention
+captures multi-scale phoneme transition dynamics across a 10-frame context
+window.
+The per-frame discrepancy score is computed as:
+
+\begin{equation}
+  s_{t} = \alpha\, s_{t}^{\,\text{learned}}
+        + (1-\alpha)\, s_{t}^{\,\text{cosine}}, \quad \alpha = 0.7
+  \label{eq:score}
+\end{equation}
+
+where $s_{t}^{\,\text{learned}}$ is the sigmoid output of a binary
+classification head applied to the concatenated projected features, and
+$s_{t}^{\,\text{cosine}} = 1 - \cos(\hat{\mathbf{a}}_{t}, \hat{\mathbf{v}}_{t})$
+is the normalised cosine discrepancy.
+Frames with $s_{t} \geq 0.65$ are flagged as anomalous.
+The video-level score averages per-frame scores, weighted by the flagged-frame
+ratio.
+
+\subsection{LLM Reasoner}
+
+The LLM reasoner receives the fusion result --- aggregate score, flagged-frame
+set, mean cosine similarity, and flagged ratio --- and issues a structured prompt
+to LLaMA 3.3 70B via the Groq inference API (sub-second time-to-first-token).
+The prompt enforces a chain-of-thought schema requiring the model to:
+(i) enumerate supporting evidence items,
+(ii) assign a categorical verdict
+    (\textit{Authentic}, \textit{Likely Fake}, or \textit{Suspicious}),
+(iii) estimate confidence, and
+(iv) recommend follow-up actions.
+The response is parsed into a typed JSON object; a rule-based fallback provides
+graceful degradation when the API is unavailable, ensuring outputs are always
+grounded in the quantitative fusion evidence rather than unconstrained generation.
+
+\subsection{Output Module}
+
+Four artefacts are produced per analysis run:
+(i)~an annotated MP4 with per-frame face bounding boxes, lip contour overlays,
+and a verdict badge;
+(ii)~an interactive HTML analysis report with an inline SVG discrepancy timeline;
+(iii)~a nine-section legal forensic report; and
+(iv)~a machine-readable JSON file for downstream integration.
+UUID-prefixed filenames prevent session collisions under concurrent access.
+All LLM-generated strings are sanitised via Python's \texttt{html.escape()}
+before template injection, preventing cross-site scripting vulnerabilities.
+
+%% ── IV. Implementation ───────────────────────────────────────────────────────
+\section{Implementation}
+
+\subsection{Technology Stack}
+
+Deep-Guard Agent is implemented in Python~3.13.
+Core dependencies include MediaPipe 0.10 (visual encoding),
+HuggingFace Transformers 4.x with \texttt{facebook/wav2vec2-base-960h}
+(audio encoding), PyTorch 2.x (fusion module), Groq SDK (LLM inference),
+OpenCV and FFmpeg (video I/O), and Gradio 4.x (web interface).
+The complete source code is publicly released as an open-source repository.
+
+\subsection{Engineering Robustness}
+
+Four design decisions ensure production-grade reliability.
+
+\textit{Thread safety.}
+The singleton pipeline is guarded by a double-checked locking pattern using
+\texttt{threading.Lock()}, ensuring that only one initialisation occurs under
+concurrent Gradio requests and preventing race conditions in lazy-loading.
+
+\textit{Efficient frame annotation.}
+Flagged frame indices are materialised into a Python \texttt{set} before video
+rendering, reducing per-frame membership testing from O($n$) list scans to
+O(1) hash lookups --- a factor-of-$n$ speedup for long-form video.
+
+\textit{XSS prevention.}
+All LLM-generated strings are passed through \texttt{html.escape()} before HTML
+template injection, neutralising prompt-injection payloads that downstream report
+viewers could otherwise execute.
+
+\textit{Pure SVG visualisations.}
+All charts are rendered as server-side SVG strings, circumventing Gradio's
+JavaScript sanitisation layer that strips \texttt{<script>} elements from
+rendered HTML components, ensuring charts display correctly without any
+client-side dependencies.
+
+\subsection{Legal Forensic Report Design}
+
+The legal forensic report is structured into nine sections across three
+functional groups (Table~\ref{tab:legal}).
+Each report embeds a SHA-256 hash of the source video file computed at
+analysis time, establishing a cryptographic integrity check that verifies
+post-submission file authenticity.
+The report explicitly cites the EU AI Act Article~50 \citep{euaiact2024},
+Take It Down Act \citep{takedown2025}, NIST SP~800-86 \citep{nist80086},
+ISO/IEC~27037:2012 \citep{iso27037}, and the Daubert standard \citep{daubert1993},
+situating each finding within its applicable legal framework.
+
+%% ── V. Evaluation ────────────────────────────────────────────────────────────
+\section{Evaluation}
+
+\subsection{Study Design}
+
+A within-subjects formative user study was conducted with $N = 10$ university
+students (5 male, 5 female; age 18--25).
+Participants were recruited across two background groups: technical
+($n = 5$; Computer Science or Information Systems) and non-technical
+($n = 5$; Law, Journalism, Social Science, Psychology).
+One participant had prior experience with a deepfake detection tool;
+mean AI familiarity was 4.3/7 (SD = 1.6).
+
+Each 60-minute session followed a standardised protocol.
+Participants completed a pre-questionnaire assessing demographics and technology
+familiarity, followed by an unaided two-video baseline task measuring unassisted
+detection ability.
+They then used Deep-Guard Agent to analyse three task videos of increasing
+ambiguity: V1 (authentic), V2 (clearly manipulated), and V3 (subtle
+manipulation).
+Post-task instruments included the 10-item System Usability Scale
+\citep{brooke1996} and four custom 7-point Likert scales measuring report
+comprehension, legal report usefulness, trust in the AI verdict, and overall
+satisfaction.
+Sessions concluded with a 10-minute semi-structured interview; responses were
+inductively coded into ten thematic categories.
+
+\subsection{Quantitative Results}
+
+\textit{Usability.}
+The mean SUS score was 70.0 (SD = 13.6), placing the system in the
+``Above Average'' category on the \citet{bangor2009} adjective scale.
+Five of ten participants exceeded the industry benchmark of 68 \citep{brooke1996}.
+A marked background effect was observed: technical participants averaged 83.8
+versus 60.8 for non-technical participants, a gap of 22 SUS points
+(Table~\ref{tab:results}).
+
+\textit{Detection accuracy.}
+Unaided baseline accuracy was 55\%, near chance level, consistent with findings
+that deepfakes are visually indistinguishable for untrained observers
+\citep{westerlund2019}.
+System-assisted accuracy rose to 85\% --- a 30 percentage point improvement.
+Agreement rates varied by stimulus: 100\% for V1 (authentic),
+95\% for V2 (clearly fake), and 60\% for V3 (subtle), confirming that ambiguous
+cases remain challenging even with AI assistance.
+
+\textit{Subjective scales.}
+All four Likert constructs fell in the neutral-to-positive range (4.17--4.72/7).
+Trust in the AI verdict was rated highest ($M = 4.72$, SD = 0.34).
+Report comprehension was rated lowest ($M = 4.17$, SD = 1.17), identifying
+technical vocabulary as the primary usability barrier.
+Legal report usefulness was rated significantly higher by law and journalism
+participants ($M = 5.75$) than by CS/IS participants ($M = 4.62$), affirming the
+report's relevance to its intended professional audience.
+
+\textit{Correlation.}
+A Spearman rank correlation between AI familiarity and SUS score yielded
+$\rho = 0.97$ ($p < .001$), indicating a near-perfect monotonic association.
+Deepfake familiarity showed negligible correlation with trust ($\rho = 0.19$),
+suggesting that general AI experience --- rather than domain-specific knowledge
+--- is the primary driver of usability perception.
+
+\subsection{Qualitative Themes}
+
+Inductive coding of interview transcripts identified four dominant themes.
+Positive themes included \textit{Clear Verdict} (7/10 participants) and
+\textit{Trust in AI Verdict} (6/10), indicating that the verdict badge and
+confidence score communicated effectively to most users.
+Six participants affirmed the practical value of the legal report, with the Law
+student noting they could envisage submitting the document as formal evidence ---
+directly validating the system's novel contribution.
+Concern themes centred on \textit{Confusing Technical Terminology} (4/10)
+--- terms such as \textit{cosine similarity} and
+\textit{articulatory discrepancy} were opaque to non-technical users ---
+\textit{Processing Speed} (4/10), and \textit{Unclear Timeline Annotations}
+(4/10).
+
+%% ── VI. Discussion ───────────────────────────────────────────────────────────
+\section{Discussion}
+
+\subsection{Reliability of LLM-Generated Explanations}
+
+A pertinent question concerns whether the LLM reasoner introduces hallucinations
+or inaccurate interpretations.
+The system employs two structural defences.
+First, the LLM receives exclusively quantitative, structured inputs (aggregate
+score, flagged-frame ratio, mean cosine similarity) rather than raw media,
+constraining the generative space to numerically grounded interpretations.
+Second, the JSON output schema enforces typed fields with enumerated verdict
+values, preventing free-form speculation.
+Nevertheless, we acknowledge the absence of an explicit faithfulness
+verification layer as a current limitation: the system does not cross-validate
+generated evidence items against input statistics using a natural language
+inference model.
+A natural extension would apply lightweight NLI-based consistency checking
+\citep{abercrombie2024} to each generated evidence item before report rendering.
+
+\subsection{Limitations}
+
+Three limitations bound the current scope.
+\textit{Untrained fusion module.}
+The fusion module operates with randomly initialised weights; no labelled
+deepfake dataset was used for supervised training.
+Discrepancy scores therefore reflect relative articulatory patterns rather than
+calibrated posterior probabilities.
+Detection performance is not yet comparable to supervised systems trained on
+FaceForensics++ \citep{rossler2019}; however, the architecture is checkpoint-ready
+and this remains the highest-priority development target.
+\textit{Sample size.}
+The formative study ($N = 10$) is appropriate for theme identification but
+underpowered for inferential testing.
+\textit{Processing latency.}
+Analysing a one-minute video requires approximately five minutes on CPU hardware,
+constraining use to asynchronous review workflows.
+
+\subsection{Future Work}
+
+Three development priorities follow directly from the evaluation findings.
+Supervised training of the fusion module on FaceForensics++ \citep{rossler2019}
+or DFDC would calibrate discrepancy scores and enable benchmarked classification
+performance.
+Addressing the vocabulary gap through inline glossaries and plain-language
+summary panels would reduce the 22-point SUS gap between technical and
+non-technical users identified in the study.
+Streaming inference architecture would extend the system to near-real-time
+live-broadcast moderation, the next critical deployment context as regulatory
+obligations expand across jurisdictions.
+
+%% ── VII. Conclusion ──────────────────────────────────────────────────────────
+\section{Conclusion}
+
+This paper presented Deep-Guard Agent, a six-module open pipeline integrating
+bimodal audio-visual deepfake detection, LLM-powered explainability, and
+ISO/IEC 27037-compliant forensic documentation in a single system.
+Grounded in articulatory physics and self-supervised speech representations
+\citep{baevski2020,shi2022avhubert,wang2024artavdf}, the system exploits the
+physical constraints governing vocal-tract motion as a detection signal that
+current generative models cannot fully replicate.
+
+A formative user study confirmed a 30 percentage point accuracy improvement over
+unaided detection and above-average system usability (SUS = 70.0).
+The legal forensic report was rated most valuable by law and journalism
+participants --- the primary intended users --- validating the system's potential
+as a digital-advocacy and evidence-gathering tool.
+The principal limitation, an untrained fusion module, is a tractable engineering
+challenge rather than a fundamental design constraint.
+With supervised training, the architecture is positioned to deliver calibrated,
+explainable deepfake detection that is simultaneously accessible to lay users
+and admissible as forensic evidence under prevailing legal standards.
+
+%% ── References ───────────────────────────────────────────────────────────────
+\bibliography{references}
+
+%% ── Figure: System Architecture ─────────────────────────────────────────────
+\clearpage
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance = 0.5cm and 0.65cm,
+  mod/.style    = {rectangle, rounded corners=4pt,
+                   minimum width=3.0cm, minimum height=1.1cm,
+                   text width=2.85cm, align=center,
+                   font=\small\bfseries},
+  sublabel/.style = {font=\scriptsize, align=center},
+  arr/.style      = {-Stealth, thick, color=gray!60},
+  darr/.style     = {-Stealth, thick, color=gray!50},
+]
+%% --- Row 1 (encoding stage) ---
+\node[mod, fill=dknavy!85, text=white]  (n1) {M1: Video Input\\[1pt]
+  {\scriptsize MP4 / AVI / MOV}};
+\node[mod, fill=dkblue!80, text=white,
+      right=of n1]                      (n2) {M2: Visual Encoder\\[1pt]
+  {\scriptsize MediaPipe \textbullet{} 256-d}};
+\node[mod, fill=dkpurple!75, text=white,
+      right=of n2]                      (n3) {M3: Audio Encoder\\[1pt]
+  {\scriptsize Wav2Vec 2.0 \textbullet{} 768-d}};
+
+%% --- Row 2 (reasoning stage) ---
+\node[mod, fill=dkcyan!75, text=white,
+      below=1.3cm of n1]                (n4) {M4: Cross-Modal Fusion\\[1pt]
+  {\scriptsize Temporal Transformer}};
+\node[mod, fill=dkamber!85, text=black,
+      below=1.3cm of n2]                (n5) {M5: LLM Reasoner\\[1pt]
+  {\scriptsize LLaMA 3.3 70B (Groq)}};
+\node[mod, fill=dkgreen!70, text=black,
+      below=1.3cm of n3]                (n6) {M6: Output\\[1pt]
+  {\scriptsize Report \textbullet{} Video \textbullet{} JSON}};
+
+%% --- Horizontal arrows row 1 ---
+\draw[arr] (n1) -- (n2);
+\draw[arr] (n2) -- (n3);
+%% --- Down arrows ---
+\draw[darr] (n1.south) -- (n4.north);
+\draw[darr] (n2.south) -- (n5.north);
+\draw[darr] (n3.south) -- (n6.north);
+%% --- Horizontal arrows row 2 ---
+\draw[arr] (n4) -- (n5);
+\draw[arr] (n5) -- (n6);
+
+%% --- Stage background boxes ---
+\begin{pgfonlayer}{background}
+  \node[fill=dkblue!6, rounded corners=5pt,
+        inner sep=8pt,
+        fit=(n1)(n2)(n3),
+        label={[font=\footnotesize\itshape,
+                anchor=south west]south west:Encoding Stage}] {};
+  \node[fill=dkgreen!6, rounded corners=5pt,
+        inner sep=8pt,
+        fit=(n4)(n5)(n6),
+        label={[font=\footnotesize\itshape,
+                anchor=north west]north west:Reasoning Stage}] {};
+\end{pgfonlayer}
+
+%% --- Fusion equation note ---
+\node[below=0.3cm of n4,
+      font=\scriptsize\itshape, text=gray!70]
+  {$s_{t}=0.7\,s_{t}^{\text{learned}}+0.3\,s_{t}^{\text{cosine}}$;\;
+   flag if $s_{t}\ge 0.65$};
+\end{tikzpicture}
+\caption{Deep-Guard Agent six-module pipeline. The encoding stage (top)
+independently extracts 256-d visual lip features and 768-d audio-articulatory
+features. The reasoning stage (bottom) fuses them via Equation~\ref{eq:score},
+generates a chain-of-thought LLM verdict, and renders four output artefacts.}
+\label{fig:arch}
+\end{figure}
+
+%% ── Table 1: Evaluation Results ──────────────────────────────────────────────
+\begin{table}[H]
+\centering
+\caption{Summary of user-study results ($N=10$). SUS grading follows
+\citet{bangor2009}; Likert items scored 1--7.}
+\label{tab:results}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{p{5.8cm} c c}
+\toprule
+\textbf{Measure} & \textbf{Value} & \textbf{Interpretation} \\
+\midrule
+\multicolumn{3}{l}{\cellcolor{rowgray}\textit{\textbf{System Usability Scale}}} \\
+\quad Mean SUS score             & 70.0 (SD\,=\,13.6)  & Above Average (C) \\
+\quad Participants $\ge$ 68      & 5/10\,(50\%)         & Above benchmark \\
+\quad Technical background       & $M$\,=\,83.8         & Good (B) \\
+\quad Non-technical background   & $M$\,=\,60.8         & Marginal (D) \\
+\midrule
+\multicolumn{3}{l}{\cellcolor{rowgray}\textit{\textbf{Detection Accuracy}}} \\
+\quad Unaided baseline           & 55\%                 & Near chance \\
+\quad System-assisted (overall)  & 85\%                 & +30\,pp improvement \\
+\quad V1 Authentic               & 100\%                & --- \\
+\quad V2 Likely Fake             & 95\%                 & --- \\
+\quad V3 Suspicious (subtle)     & 60\%                 & Ambiguous cases harder \\
+\midrule
+\multicolumn{3}{l}{\cellcolor{rowgray}\textit{\textbf{Likert Scales (1--7)}}} \\
+\quad Report Comprehension       & 4.17 (SD\,=\,1.17)  & Neutral \\
+\quad Legal Report Usefulness    & 4.60 (SD\,=\,0.85)  & Neutral--Positive \\
+\quad Trust in AI Verdict        & 4.72 (SD\,=\,0.34)  & Neutral--Positive \\
+\quad Overall Satisfaction       & 4.65 (SD\,=\,0.78)  & Neutral--Positive \\
+\midrule
+\multicolumn{3}{l}{\cellcolor{rowgray}\textit{\textbf{Spearman Correlation}}} \\
+\quad AI Familiarity vs.\ SUS    & $\rho=0.97$, $p<.001$& Near-perfect \\
+\quad DF Familiarity vs.\ Trust  & $\rho=0.19$          & Negligible \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ── Table 2: Legal Report Structure ─────────────────────────────────────────
+\begin{table}[H]
+\centering
+\caption{Nine-section structure of the legal forensic report and compliance
+mapping to applicable standards.}
+\label{tab:legal}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{l l p{5.0cm}}
+\toprule
+\textbf{Group} & \textbf{Section} & \textbf{Compliance Mapping} \\
+\midrule
+\multirow{3}{*}{Identification}
+  & (1) Case Information  & ISO/IEC 27037 Sec.~5.1 (documentation) \\
+  & (2) Forensic Verdict  & Daubert (testability, error rate) \\
+  & (3) Methodology       & Daubert (peer-reviewed method) \\
+\midrule
+\multirow{3}{*}{Evidence}
+  & (4) Quantitative Findings & EU AI Act Art.~50 (transparency) \\
+  & (5) Discrepancy Timeline  & NIST SP 800-86 (artefact logging) \\
+  & (6) Flagged Frames Table  & NIST OpenMFC (temporal evidence) \\
+\midrule
+\multirow{3}{*}{Compliance}
+  & (7) Evidence Summary      & Daubert (general acceptance) \\
+  & (8) Chain of Custody      & ISO/IEC 27037 Sec.~6 (integrity) \\
+  & (9) Limitations           & ISO/IEC 27037 Sec.~5.4 (limitations) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}

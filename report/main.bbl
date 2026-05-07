@@ -1,0 +1,79 @@
+\begin{thebibliography}{}
+
+\bibitem[Abercrombie et~al., 2024]{abercrombie2024}
+Abercrombie, G., Loken, E., Rieser, V., and Talat, Z. (2024).
+\newblock A taxonomy of harms motivated by claims about {AI} language models.
+\newblock {\em ACL Anthology}.
+
+\bibitem[Baevski et~al., 2020]{baevski2020}
+Baevski, A., Zhou, H., Mohamed, A., and Auli, M. (2020).
+\newblock wav2vec 2.0: A framework for self-supervised learning of speech representations.
+\newblock {\em Advances in Neural Information Processing Systems}, 33:12449--12460.
+
+\bibitem[Bangor et~al., 2009]{bangor2009}
+Bangor, A., Kortum, P., and Miller, J. (2009).
+\newblock Determining what individual {SUS} scores mean: Adding an adjective rating scale.
+\newblock {\em Journal of Usability Studies}, 4(3):114--123.
+
+\bibitem[Brooke, 1996]{brooke1996}
+Brooke, J. (1996).
+\newblock {SUS}: A ``quick and dirty'' usability scale.
+\newblock {\em Usability Evaluation in Industry}, 189(194):4--7.
+
+\bibitem[{European Parliament}, 2024]{euaiact2024}
+{European Parliament} (2024).
+\newblock Regulation ({EU}) 2024/1689 laying down harmonised rules on artificial intelligence (artificial intelligence act).
+\newblock Technical report, Official Journal of the European Union.
+\newblock Article 50: Obligations for providers and deployers of certain AI systems.
+
+\bibitem[{International Organization for Standardization}, 2012]{iso27037}
+{International Organization for Standardization} (2012).
+\newblock {ISO/IEC} 27037:2012 --- information technology --- security techniques --- guidelines for identification, collection, acquisition and preservation of digital evidence.
+\newblock Technical report, ISO.
+
+\bibitem[Kahneman, 2011]{kahneman2011}
+Kahneman, D. (2011).
+\newblock {\em Thinking, Fast and Slow}.
+\newblock Farrar, Straus and Giroux, New York, NY.
+
+\bibitem[Kent et~al., 2006]{nist80086}
+Kent, K., Chevalier, S., Grance, T., and Dang, H. (2006).
+\newblock {NIST} special publication 800-86: Guide to integrating forensic techniques into incident response.
+\newblock Technical report, National Institute of Standards and Technology.
+
+\bibitem[R{\"o}ssler et~al., 2019]{rossler2019}
+R{\"o}ssler, A., Cozzolino, D., Verdoliva, L., Riess, C., Thies, J., and Nie{\ss}ner, M. (2019).
+\newblock {FaceForensics++}: Learning to detect manipulated facial images.
+\newblock In {\em Proceedings of the IEEE/CVF International Conference on Computer Vision}, pages 1--11.
+
+\bibitem[{Sensity AI}, 2023]{sensity2023}
+{Sensity AI} (2023).
+\newblock The state of deepfakes 2023: Landscape, threats, and impact.
+\newblock Technical report, Sensity AI.
+
+\bibitem[Shi et~al., 2022]{shi2022avhubert}
+Shi, B., Hsu, W.-N., Lakhotia, K., and Mohamed, A. (2022).
+\newblock Learning audio-visual speech representation by masked multimodal cluster prediction.
+\newblock In {\em International Conference on Learning Representations}.
+
+\bibitem[{United States Congress}, 2025]{takedown2025}
+{United States Congress} (2025).
+\newblock Take it down act.
+\newblock Public Law 119-10.
+
+\bibitem[{United States Supreme Court}, 1993]{daubert1993}
+{United States Supreme Court} (1993).
+\newblock Daubert v.\ {Merrell Dow Pharmaceuticals}, inc.
+\newblock 509 U.S. 579.
+
+\bibitem[Wang and Huang, 2024]{wang2024artavdf}
+Wang, Z. and Huang, H. (2024).
+\newblock {ART-AVDF}: Articulatory representation learning for audio-visual deepfake detection.
+\newblock In {\em Proceedings of the IEEE International Conference on Acoustics, Speech and Signal Processing}.
+
+\bibitem[Westerlund, 2019]{westerlund2019}
+Westerlund, M. (2019).
+\newblock The emergence of deepfake technology: A review.
+\newblock {\em Technology Innovation Management Review}, 9(11):39--52.
+
+\end{thebibliography}
